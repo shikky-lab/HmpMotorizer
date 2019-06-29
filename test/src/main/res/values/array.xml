@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="pictypes">
+        <item>JPG</item>
+        <item>PNG</item>
+        <item>BMP</item>
+    </string-array>
+    <string-array name="preview_gravity">
+        <item>Top</item>
+        <item>Center</item>
+        <item>Bottom</item>
+    </string-array>
+</resources>

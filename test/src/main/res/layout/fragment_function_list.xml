@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+    <RelativeLayout
+        android:id="@+id/ll_head"
+        android:background="#59BAFF"
+        android:layout_width="match_parent"
+        android:layout_height="55dp">
+        <TextView
+            android:textColor="#fff"
+            android:text="@string/app_name"
+            android:textSize="18sp"
+            android:layout_centerInParent="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </RelativeLayout>
+
+    <jp.co.ricoh.hmp.test.view.widget.FunctionListView
+        android:layout_below="@+id/ll_head"
+        android:id="@+id/function_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:divider="#000000"
+        android:dividerHeight="1px"
+        android:listSelector="@drawable/bg_list_selector"
+        android:scrollbars="vertical"
+        android:fadeScrollbars="false"
+        android:scrollbarStyle="outsideOverlay" />
+
+</RelativeLayout>

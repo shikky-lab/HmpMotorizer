@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:test="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/item"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/printer_info"
+        android:layout_width="0dp"
+        android:layout_height="50dp"
+        android:layout_marginStart="16dp"
+        android:gravity="center_vertical"
+        android:textColor="#B2000000"
+        android:textSize="18sp"
+        test:layout_constraintBottom_toBottomOf="parent"
+        test:layout_constraintStart_toStartOf="parent"
+        test:layout_constraintTop_toTopOf="parent" />
+
+</android.support.constraint.ConstraintLayout>

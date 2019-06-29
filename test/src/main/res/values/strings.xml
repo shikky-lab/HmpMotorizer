@@ -1,0 +1,194 @@
+<resources>
+    <string name="app_name">Ricoh Handy Printer Sample</string>
+    <string name="auto_off_title">AUTO OFF TIME SETTING</string>
+    <string name="barcode_title">BARCODE</string>
+    <string name="bluetooth_name_title">BLUETOOTH NAME SETTING</string>
+    <string name="bluetooth_set_title">BLUETOOTH SETTING</string>
+    <string name="bluetooth_other_connect_title">BLUETOOTH OTHER CONNECT</string>
+    <string name="device_set_title">DEVICE SETTING</string>
+    <string name="device_status_title">DEVICE STATUS</string>
+    <string name="photo_title">PHOTO</string>
+    <string name="printer_list_title">CONNECT</string>
+    <string name="qrcode_title">QRCODE</string>
+    <string name="sound_setting_title">SOUND SETTING</string>
+    <string name="text_title">TEXT</string>
+    <string name="text_incre_title">TEXT INCREMENT</string>
+    <string name="vertical_text_title">VTEXT</string>
+
+    <string name="auto_off_categray">AutoOffTime</string>
+    <string name="barcode_categray">BarCode</string>
+    <string name="bluetooth_name_categray">BlueetoothNameSetting</string>
+    <string name="function_list_categray">FunctionList</string>
+    <string name="photo_categray">Photo</string>
+    <string name="qrcode_categray">QRCode</string>
+    <string name="sound_categray">Sound</string>
+    <string name="text_categray">Text</string>
+    <string name="text_incr_categray">TextIncre</string>
+    <string name="ver_text_categray">VText</string>
+    <string name="gravity">Gravity</string>
+
+    <string name="photo_no_file">No file!</string>
+
+    <string name="qrcode_image_not_created">Image is not created</string>
+    <string name="qrcode_error_correction_empty">Error correction is empty</string>
+    <string name="qrcode_value_numeric">Value must be numeric</string>
+    <string name="qrcode_cell_size_empty">Cell size is empty</string>
+    <string name="qrcode_body_empty">Body is empty</string>
+
+    <string name="printer_list_connect_success">Connect success</string>
+    <string name="printer_list_connect_fail">Connect fail</string>
+
+    <string name="auto_off_text_title">Time: </string>
+    <string name="auto_off_text_hint">time</string>
+    <string name="auto_off_comment">(minutes)</string>
+
+    <string name="function_list_connect">CONNECT</string>
+    <string name="function_list_text">TEXT</string>
+    <string name="function_list_vtext">VTEXT</string>
+    <string name="function_list_text_increment">TEXT INCREMENT</string>
+    <string name="function_list_qrcode">QRCODE</string>
+    <string name="function_list_barcode">BARCODE</string>
+    <string name="function_list_photo">PHOTO</string>
+    <string name="function_list_device_setting">DEVICE SETTING</string>
+    <string name="function_list_device_status">DEVICE STATUS</string>
+    <string name="function_list_bluetooth_setting">BLUETOOTH SETTING</string>
+    <string name="function_list_bluetooth_device_list">BLUETOOTH DEVICES</string>
+
+    <string name="device_status_bluetooth">Bluetooth</string>
+    <string name="device_status_ink">Ink</string>
+    <string name="device_status_battery">Battery</string>
+    <string name="device_status_error_message">Error Message</string>
+    <string name="device_status_firmware_version">Firmware Version</string>
+    <string name="device_status_serial_number">Serial Number</string>
+    <string name="device_status_connected">Connected</string>
+    <string name="device_status_label">%</string>
+    <string name="device_status_update_failed">UPDATE_FAILED</string>
+    <string name="device_status_front_cover">FRONT_COVER</string>
+    <string name="device_status_cartridge_off">CARTRIDGE_OFF</string>
+    <string name="device_status_battery_end">BATTERY_END</string>
+    <string name="device_status_cartridge_failure1">CARTRIDGE_FAILURE1</string>
+    <string name="device_status_cartridge_failure2">CARTRIDGE_FAILURE2</string>
+    <string name="device_status_err100">ERR100</string>
+    <string name="device_status_err101">ERR101</string>
+    <string name="device_status_err200">ERR200</string>
+    <string name="device_status_err201">ERR201</string>
+    <string name="device_status_err202">ERR202</string>
+    <string name="device_status_err203">ERR203</string>
+    <string name="device_status_none">None</string>
+    <string name="device_status_no_connected">Not Connected</string>
+    <string name="device_status_no_obtained">No Obtained</string>
+
+    <string name="barcode_format_aztec" translatable="false">Aztec</string>
+    <string name="barcode_format_codabar" translatable="false">CODABAR</string>
+    <string name="barcode_format_code_39" translatable="false">Code 39</string>
+    <string name="barcode_format_code_93" translatable="false">Code 93</string>
+    <string name="barcode_format_code_128" translatable="false">Code 128</string>
+    <string name="barcode_format_data_matrix" translatable="false">Data Matrix</string>
+    <string name="barcode_format_ean_8" translatable="false">EAN-8</string>
+    <string name="barcode_format_ean_13" translatable="false">EAN-13</string>
+    <string name="barcode_format_itf" translatable="false">ITF</string>
+    <string name="barcode_format_maxicode" translatable="false">MaxiCode</string>
+    <string name="barcode_format_pdf_417" translatable="false">PDF417</string>
+    <string name="barcode_format_rss_14" translatable="false">RSS 14</string>
+    <string name="barcode_format_rss_expanded" translatable="false">RSS EXPANDED</string>
+    <string name="barcode_format_upc_a" translatable="false">UPC-A</string>
+    <string name="barcode_format_upc_e" translatable="false">UPC-E</string>
+    <string name="barcode_format_upc_ean_extension" translatable="false">UPC/EAN extension</string>
+    <string name="barcode_weight_maximum">Maximum  (12px)</string>
+    <string name="barcode_weight_normal">Normal (10px)</string>
+    <string name="barcode_weight_minimum">Minimum (8px)</string>
+    <string name="barcode_height_50" translatable="false"> 5.0 mm</string>
+    <string name="barcode_height_55" translatable="false"> 5.5 mm</string>
+    <string name="barcode_height_60" translatable="false"> 6.0 mm</string>
+    <string name="barcode_height_65" translatable="false"> 6.5 mm</string>
+    <string name="barcode_height_70" translatable="false"> 7.0 mm</string>
+    <string name="barcode_height_75" translatable="false"> 7.5 mm</string>
+    <string name="barcode_height_80" translatable="false"> 8.0 mm</string>
+    <string name="barcode_height_85" translatable="false"> 8.5 mm</string>
+    <string name="barcode_height_90" translatable="false"> 9.0 mm</string>
+    <string name="barcode_height_95" translatable="false"> 9.5 mm</string>
+    <string name="barcode_height_100" translatable="false"> 10.0 mm</string>
+    <string name="barcode_height_105" translatable="false"> 10.5 mm</string>
+    <string name="barcode_height_110" translatable="false"> 11.0 mm</string>
+    <string name="barcode_height_135" translatable="false"> 13.5 mm</string>
+    <string name="label_plus" translatable="false">+</string>
+    <string name="label_minus" translatable="false">-</string>
+    <string name="label_direction">Scanning Direction</string>
+    <string name="label_copies">Repeat Times</string>
+    <string name="barcode_format">Format: </string>
+    <string name="barcode_weight">Weight:</string>
+    <string name="barcode_height">Height: </string>
+    <string name="barcode_repeat_times">Repeat Times</string>
+    <string name="barcode_frame_title">Frame:</string>
+    <string name="barcode_no_frame">No Frame</string>
+    <string name="barcode_frame">Frame</string>
+
+    <string name="save">Save</string>
+
+    <string name="message_connect_device">Please connect to device</string>
+    <string name="message_no_input_time">Please input time</string>
+    <string name="message_no_input_text">Please Input Text</string>
+    <string name="message_data_not_created">Print data is not created</string>
+    <string name="message_unvalid">Input value is unvalid</string>
+    <string name="message_print_start">Print Start</string>
+    <string name="message_print_complete">Print Complete</string>
+    <string name="message_print_cancel">Print Cancel</string>
+    <string name="message_update_fail">Fireware update failed</string>
+    <string name="message_front_cover_opened">Front cover is opened</string>
+    <string name="message_catridge_off">Catridge is off</string>
+    <string name="message_battery_end">Battery is end</string>
+    <string name="message_black_end">Black is end</string>
+    <string name="message_cartridge_broken">Cartridge is broken</string>
+    <string name="message_printer_cleaning">Printer is cleaning</string>
+    <string name="message_calibrating_device">Calibrating the device</string>
+    <string name="message_black_near_end">Black is near end</string>
+    <string name="message_cap_need">Cap is needed</string>
+    <string name="message_move_slow">Move the device more slowly</string>
+    <string name="message_flat_surface">Please print on a flat surface</string>
+    <string name="message_sc">Error :</string>
+    <string name="message_value_empty">Value is empty</string>
+    <string name="message_value_length">Value must be numeric, and the length must be 3</string>
+    <string name="message_value_numeirc">Value must be numeric, and the length is less than 4</string>
+    <string name="message_min_larger_max">Max value need to be larger than min value</string>
+    <string name="message_format_illegal">Format is illegal</string>
+    <string name="message_value_not_enter">Value is not entered</string>
+    <string name="message_printing">Printer is printing</string>
+    <string name="message_value_invalid">The entered value is invalid.</string>
+
+    <string name="print_position_title">Print Start Position</string>
+    <string name="print_position_outline">Outline</string>
+    <string name="print_position_center">Center</string>
+    <string name="bluetooth_name">Name: </string>
+    <string name="bluetooth_new_name">New Name: </string>
+    <string name="bluetooth_name_setting">Name Setting</string>
+
+    <string name="sound_setting">Sound Setting</string>
+    <string name="auto_off_time_setting">Auto Off Time Setting</string>
+
+    <string name="photo_width">Width: </string>
+    <string name="photo_height">Height: </string>
+    <string name="print">Print</string>
+    <string name="cancel_print">Cancel Print</string>
+    <string name="cell_size">Cell Size:</string>
+    <string name="error_correction">Error Correction:</string>
+
+    <string name="sounde_on">ON</string>
+    <string name="sounde_off">OFF</string>
+
+    <string name="text_input">Text Input: </string>
+    <string name="text_body">Body</string>
+    <string name="text_preview">Preview: </string>
+
+    <string name="text_incr_format">Format:</string>
+    <string name="text_incr_min">Min:</string>
+    <string name="text_incr_max">Max:</string>
+
+    <string name="auto_off_three">3 minutes</string>
+    <string name="auto_off_five">5 minutes</string>
+    <string name="auto_off_ten">10 minutes</string>
+    <string name="auto_off_none">None</string>
+
+    <string name="image_select">Image Select</string>
+
+    <string name="photo_line_drawing">Line Drawing:</string>
+</resources>

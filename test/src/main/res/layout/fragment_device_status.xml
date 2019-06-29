@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <include layout="@layout/head_layout"/>
+
+    <jp.co.ricoh.hmp.test.view.widget.PrinterStatusListView
+        android:id="@+id/status_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:divider="#000000"
+        android:dividerHeight="1px"
+        android:listSelector="@drawable/bg_list_selector"
+        android:scrollbars="vertical"
+        android:fadeScrollbars="false"
+        android:scrollbarStyle="outsideOverlay" />
+
+</LinearLayout>
