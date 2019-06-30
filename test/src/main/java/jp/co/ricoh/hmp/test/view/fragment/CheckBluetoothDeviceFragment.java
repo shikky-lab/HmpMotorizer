@@ -1,50 +1,22 @@
 package jp.co.ricoh.hmp.test.view.fragment;
 
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Rect;
-import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.text.Editable;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
-import android.text.style.AbsoluteSizeSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import org.greenrobot.eventbus.Subscribe;
-
-import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.OnClick;
 import butterknife.OnTextChanged;
-import jp.co.ricoh.hmp.sdk.image.HmpImage;
-import jp.co.ricoh.hmp.sdk.image.HmpImageFactory;
-import jp.co.ricoh.hmp.sdk.image.generator.Text;
-import jp.co.ricoh.hmp.sdk.printer.HmpSettings;
-import jp.co.ricoh.hmp.sdk.printer.HmpSettings.Direction;
-import jp.co.ricoh.hmp.sdk.printer.HmpSettings.Pass;
-import jp.co.ricoh.hmp.sdk.printer.HmpSettings.Theta;
 import jp.co.ricoh.hmp.test.MainActivity;
 import jp.co.ricoh.hmp.test.MainActivity.Transition;
 import jp.co.ricoh.hmp.test.R;
-import jp.co.ricoh.hmp.test.model.Logger;
-import jp.co.ricoh.hmp.test.model.PrinterManager;
-import jp.co.ricoh.hmp.test.view.widget.CopiesEdit;
-import jp.co.ricoh.hmp.test.view.widget.DirectionSwitch;
-
-import static android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT;
+import jp.co.ricoh.hmp.test.model.BtDeviceManager;
 
 /**
  *
@@ -55,6 +27,8 @@ import static android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT;
 public class CheckBluetoothDeviceFragment extends BaseFragment {
 
     private static final String TAG = CheckBluetoothDeviceFragment.class.getSimpleName();
+
+    final BtDeviceManager mBtDeviceManager = BtDeviceManager.getInstance();
 
     @BindView(R.id.head_title)
     TextView tvTitle;
@@ -67,6 +41,9 @@ public class CheckBluetoothDeviceFragment extends BaseFragment {
 
     @BindView(R.id.send_button)
     Button mSendButton;
+
+    @BindView(R.id.read_button)
+    Button mReadButton;
 
     @BindView(R.id.notified_text)
     TextView mNotifiedText;
@@ -98,11 +75,17 @@ public class CheckBluetoothDeviceFragment extends BaseFragment {
 
     @OnTextChanged(value = R.id.to_write_text, callback = OnTextChanged.Callback.AFTER_TEXT_CHANGED)
     void afterTextChanged(Editable s) {
-
     }
 
     @OnClick(R.id.send_button)
     public void onClickSendButton() {
+        String sendText = mWriteText.getText().toString();
+        mBtDeviceManager.write(sendText);
+    }
+
+    @OnClick(R.id.send_button)
+    public void onClickReadButton() {
+        mBtDeviceManager.read();
     }
 
     @OnClick(R.id.iv_back)

@@ -42,6 +42,12 @@
                 android:background="@drawable/bg_frame"
                 android:text="@string/auto_off_none" />
 
+            <Button
+                android:id="@+id/read_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/read_button" />
+
         </LinearLayout>
 
         <LinearLayout
@@ -97,6 +103,7 @@
                 android:background="@drawable/bg_frame"
                 android:text="@string/auto_off_none" />
         </LinearLayout>
+
     </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>

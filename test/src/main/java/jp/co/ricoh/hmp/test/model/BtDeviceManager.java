@@ -283,4 +283,23 @@ public class BtDeviceManager implements LifecycleObserver {
        }
        return mUiThreadHandler;
     }
+
+    public synchronized  void write(String sendText){
+        if(mStatus != BluetoothProfile.STATE_CONNECTED) {
+            return;
+        }
+
+        if(sendText == null){
+            sendText = "";
+        }
+        mTargetCharacteristic.setValue(sendText.getBytes());
+        mConnGatt.writeCharacteristic(mTargetCharacteristic);
+    }
+
+    public synchronized void read(){
+        if(mStatus != BluetoothProfile.STATE_CONNECTED) {
+            return;
+        }
+        mConnGatt.readCharacteristic(mTargetCharacteristic);
+    }
 }

@@ -197,4 +197,5 @@
     <string name="write_label">Write :</string>
     <string name="notify_label">Notify :</string>
     <string name="send_button_label">SEND</string>
+    <string name="read_button">READ</string>
 </resources>
