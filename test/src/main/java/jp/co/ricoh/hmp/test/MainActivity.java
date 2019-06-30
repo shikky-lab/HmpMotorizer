@@ -1,7 +1,12 @@
 package jp.co.ricoh.hmp.test;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -21,7 +26,7 @@ import jp.co.ricoh.hmp.test.view.fragment.FunctionListFragment;
  * サンプル画面
  */
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity{
 
     /**
      * タグ
@@ -47,13 +52,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         getLifecycle().addObserver(mPrinterManager);
 
         setContentView(R.layout.activity_main);
 
         ButterKnife.bind(this);
-
     }
 
     @Override

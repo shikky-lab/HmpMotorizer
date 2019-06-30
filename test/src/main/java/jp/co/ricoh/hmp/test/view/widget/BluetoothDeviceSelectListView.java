@@ -169,10 +169,10 @@ public class BluetoothDeviceSelectListView extends ListView {
      *
      * @return アイテムリスト
      */
-//    public synchronized HmpPrinter getSelectedPrinter(int position) {
-//        Item item = mItems.get(position);
-//        return item.mPrinter;
-//    }
+    public synchronized BluetoothDevice getSelectedDevice(int position) {
+        Item item = mItems.get(position);
+        return item.getBtDevice();
+    }
 
     /**
      * アイテム

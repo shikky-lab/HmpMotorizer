@@ -11,6 +11,7 @@ import java.util.Set;
 
 import butterknife.BindView;
 import butterknife.OnClick;
+import butterknife.OnItemClick;
 import jp.co.ricoh.hmp.test.MainActivity;
 import jp.co.ricoh.hmp.test.R;
 import jp.co.ricoh.hmp.test.model.BtDeviceManager;
@@ -55,6 +56,12 @@ public class BluetoothConnectFragment extends BaseFragment{
 //    {
 //        BlueetoothNameSettingFragment.startFragment(MainActivity.Transition.NEXT);
 //    }
+
+    @OnItemClick(R.id.bt_device_list)
+    public void onItemClick(int position) {
+        BluetoothDevice mBtDevice =  mBTDevListView.getSelectedDevice(position);
+        mBtDeviceManager.connect(mBtDevice);
+    }
 
     @OnClick(R.id.iv_back)
     public void OnClickDoneButton(View v)
