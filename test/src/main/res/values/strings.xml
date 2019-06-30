@@ -4,7 +4,8 @@
     <string name="barcode_title">BARCODE</string>
     <string name="bluetooth_name_title">BLUETOOTH NAME SETTING</string>
     <string name="bluetooth_set_title">BLUETOOTH SETTING</string>
-    <string name="bluetooth_other_connect_title">BLUETOOTH OTHER CONNECT</string>
+    <string name="bluetooth_other_connect_title">BLUETOOTH DEVICE CONNECT</string>
+    <string name="bluetooth_check_title">BLUETOOTH CHECK</string>
     <string name="device_set_title">DEVICE SETTING</string>
     <string name="device_status_title">DEVICE STATUS</string>
     <string name="photo_title">PHOTO</string>
@@ -53,6 +54,7 @@
     <string name="function_list_device_status">DEVICE STATUS</string>
     <string name="function_list_bluetooth_setting">BLUETOOTH SETTING</string>
     <string name="function_list_bluetooth_device_list">BLUETOOTH DEVICES</string>
+    <string name="function_list_check_bluetooth_device">BLUETOOTH CHECK</string>
 
     <string name="device_status_bluetooth">Bluetooth</string>
     <string name="device_status_ink">Ink</string>
@@ -191,4 +193,8 @@
     <string name="image_select">Image Select</string>
 
     <string name="photo_line_drawing">Line Drawing:</string>
+    <string name="read_label">Read:</string>
+    <string name="write_label">Write :</string>
+    <string name="notify_label">Notify :</string>
+    <string name="send_button_label">SEND</string>
 </resources>

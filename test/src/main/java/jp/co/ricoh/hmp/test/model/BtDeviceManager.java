@@ -224,21 +224,21 @@ public class BtDeviceManager implements LifecycleObserver {
         if (device == null) {
             return;
         }
+        if(mBtDevice != null && !device.equals(mBtDevice)){
+            mBtDevice = null;
+            mConnGatt.disconnect();
+            Toast.makeText(mContext, "Other device selected.disconnecting" + mStatus, Toast.LENGTH_SHORT).show();
+            return;
+        }
         mBtDevice = device;
 
         //接続
-        if ((mConnGatt == null)
-                && (mStatus == BluetoothProfile.STATE_DISCONNECTED)) {
+        if (mConnGatt == null){
             // try to connect
             Toast.makeText(mContext, "connecting" , Toast.LENGTH_SHORT).show();
             mConnGatt = mBtDevice.connectGatt(mContext, false, mGattcallback);
             mStatus = BluetoothProfile.STATE_CONNECTING;
         } else {
-            if (mConnGatt == null){
-                Log.e(TAG, "state error");
-                return;
-            }
-
             if(mStatus == BluetoothProfile.STATE_CONNECTED){
                 if(mTargetCharacteristic !=null){
                     Toast.makeText(mContext, "Already connecting, write \"Hello BLE\"", Toast.LENGTH_SHORT).show();
@@ -250,7 +250,7 @@ public class BtDeviceManager implements LifecycleObserver {
                 // re-connect and re-discover Services
                 Toast.makeText(mContext, "Re connect Start" , Toast.LENGTH_SHORT).show();
                 mConnGatt.connect();
-                mConnGatt.discoverServices();
+//                mConnGatt.discoverServices();
             }else{
                 Toast.makeText(mContext, "Unexpected states: " + mStatus, Toast.LENGTH_SHORT).show();
             }
@@ -262,7 +262,6 @@ public class BtDeviceManager implements LifecycleObserver {
      */
     public synchronized void disconnect() {
         mConnGatt.disconnect();
-//        mConnGatt.close();
     }
 
     private void registerNotification(BluetoothGattCharacteristic mChar){

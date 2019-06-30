@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import java.util.Set;
 
@@ -23,8 +24,8 @@ import jp.co.ricoh.hmp.test.view.widget.BluetoothDeviceSelectListView;
 public class BluetoothConnectFragment extends BaseFragment{
     final BtDeviceManager mBtDeviceManager = BtDeviceManager.getInstance();
 
-//    @BindView(R.id.head_title)
-//    TextView tvTitle;
+    @BindView(R.id.head_title)
+    TextView tvTitle;
 
     @BindView(R.id.bt_device_list)
     BluetoothDeviceSelectListView mBTDevListView;
@@ -42,6 +43,7 @@ public class BluetoothConnectFragment extends BaseFragment{
     public void onStart() {
         super.onStart();
         Set<BluetoothDevice> bondedDeviceSet = mBtDeviceManager.getBondedDevices();
+        tvTitle.setText(getResources().getString(R.string.bluetooth_other_connect_title));
         mBTDevListView.update(bondedDeviceSet);
     }
 

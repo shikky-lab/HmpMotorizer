@@ -55,6 +55,7 @@ public class FunctionListFragment extends BaseFragment {
         names.add(getResources().getString(R.string.function_list_device_status));
         names.add(getResources().getString(R.string.function_list_bluetooth_setting));
         names.add(getResources().getString(R.string.function_list_bluetooth_device_list));
+        names.add(getResources().getString(R.string.function_list_check_bluetooth_device));
         mFunctionList.update(names);
     }
 
@@ -98,6 +99,9 @@ public class FunctionListFragment extends BaseFragment {
                 break;
             case 10:
                 BluetoothConnectFragment.startFragment(Transition.NEXT);
+                break;
+            case 11:
+                CheckBluetoothDeviceFragment.startFragment(Transition.NEXT);
                 break;
         }
     }
