@@ -28,6 +28,9 @@ public class BleUuid {
 	public static final String CHAR_SAMPLE_RWN = "0000fff4-0000-1000-8000-00805f9b34fb";
 	public static final String CHAR_SAMPLE_R = "0000fff1-0000-1000-8000-00805f9b34fb";
 
+	// 180d Services
+	public static final String DESCRIPTOR_NOTIFICATION_ENABLED_STATE = "0000fff1-0000-1000-8000-00805f9b34fb";
+
 	// 180F Battery Service
 	public static final String SERVICE_BATTERY_SERVICE = "0000180F-0000-1000-8000-00805f9b34fb";
 	public static final String CHAR_BATTERY_LEVEL = "00002a19-0000-1000-8000-00805f9b34fb";

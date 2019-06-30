@@ -6,19 +6,16 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
-
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
+import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
-
 import java.nio.ByteBuffer;
 import java.util.Set;
-import java.util.concurrent.ScheduledFuture;
-
 import jp.co.ricoh.hmp.test.util.BleUuid;
 import java.util.UUID;
 
@@ -37,55 +34,35 @@ public class BtDeviceManager implements LifecycleObserver {
     private static final String TAG = BtDeviceManager.class.getSimpleName();
 
     /**
-     * リクエストコード
-     */
-//    static final int REQUEST_ENABLE_BT = 1;
-
-    /**
      * インスタンス
      */
-    static BtDeviceManager sInstance = null;
+    private static BtDeviceManager sInstance = null;
 
     /**
      * コンテキストリファレンス
      */
-    final Context mContext;
-
-    /**
-     * デバイスアダプタ
-     */
-    private BluetoothAdapter mBTAdapter;
-
-    /**
-     * 接続タスク
-     */
-    ScheduledFuture mConnectFuture = null;
+    private final Context mContext;
 
     /**
      * 選択したBluetooth機器
      */
-    BluetoothDevice mBtDevice = null;
-    BluetoothGattCharacteristic targetChar1 = null;
-    BluetoothGattCharacteristic targetChar4 = null;
+    private BluetoothDevice mBtDevice = null;
+    private BluetoothGattCharacteristic mTargetCharacteristic = null;
 
-    /**
-     * アクテビティ
-     */
+//    /**
+//     * アクテビティ
+//     */
 //    MainActivity mActivity = null;
 
-    /**
-     * エラー状態
-     */
+//    /**
+//     * エラー状態
+//     */
 //    HmpCommand.DeviceStatus mError = HmpCommand.DeviceStatus.DISCONNECTED;
-
-    /**
-     * Bluetooth使用可否
-     */
-    boolean isBluetoothEnable = false;
 
     //callback共用変数
     private int mStatus;
     private BluetoothGatt mConnGatt;
+    private Handler mUiThreadHandler = null;
 
     private final BluetoothGattCallback mGattcallback = new BluetoothGattCallback() {
         @Override
@@ -94,8 +71,13 @@ public class BtDeviceManager implements LifecycleObserver {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 mStatus = newState;
                 mConnGatt.discoverServices();
+
+                Runnable myRunnable = () -> Toast.makeText(mContext, "Connected" , Toast.LENGTH_SHORT).show();
+                getUiThreadHandler().post(myRunnable);
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 mStatus = newState;
+                Runnable myRunnable = () -> Toast.makeText(mContext, "Disconnected" , Toast.LENGTH_SHORT).show();
+                getUiThreadHandler().post(myRunnable);
             }
         }
 
@@ -112,10 +94,8 @@ public class BtDeviceManager implements LifecycleObserver {
                 }
                 if (BleUuid.SERVICE_SAMPLE.equalsIgnoreCase(service
                         .getUuid().toString())) {
-                    targetChar1 = service.getCharacteristic(UUID.fromString(BleUuid.CHAR_SAMPLE_R));
-                    targetChar4 = service.getCharacteristic(UUID.fromString(BleUuid.CHAR_SAMPLE_RWN));
-                    registerNotification(targetChar4);
-//                        Logger.i(TAG, "read Char_sample_rwn:" + targetChar.getStringValue(0));
+                    mTargetCharacteristic = service.getCharacteristic(UUID.fromString(BleUuid.CHAR_SAMPLE_RWN));
+                    registerNotification(mTargetCharacteristic);
                 }
             }
         }
@@ -124,27 +104,16 @@ public class BtDeviceManager implements LifecycleObserver {
         public void onCharacteristicRead(BluetoothGatt gatt,
                                          BluetoothGattCharacteristic characteristic, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                if (BleUuid.CHAR_MANUFACTURER_NAME_STRING
-                        .equalsIgnoreCase(characteristic.getUuid().toString())) {
-                    final String name = characteristic.getStringValue(0);
-
-                } else if (BleUuid.CHAR_SERIAL_NUMBER_STRING
-                        .equalsIgnoreCase(characteristic.getUuid().toString())) {
-                    final String name = characteristic.getStringValue(0);
-
-                } else if (BleUuid.CHAR_SAMPLE_RWN.equalsIgnoreCase(characteristic.getUuid().toString())) {
-//                    final String readData = characteristic.getStringValue(0);
+                if (BleUuid.CHAR_SAMPLE_RWN.equalsIgnoreCase(characteristic.getUuid().toString())) {
                     final byte[] readData = characteristic.getValue();
                     ByteBuffer bb = ByteBuffer.wrap(readData);
                     Logger.i(TAG, "read data:" + bb);
-//                    Toast.makeText(mContext, "read data:" + readData, Toast.LENGTH_SHORT).show();
                 } else if (BleUuid.CHAR_SAMPLE_R.equalsIgnoreCase(characteristic.getUuid().toString())) {
                     final byte[] readData2 = characteristic.getValue();
                     ByteBuffer bb = ByteBuffer.wrap(readData2);
                     final String strChar = String.valueOf(bb.getShort());
                     Logger.i(TAG, "read data2:" + strChar);
                 }
-
             }
         }
 
@@ -157,10 +126,10 @@ public class BtDeviceManager implements LifecycleObserver {
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicChanged(gatt, characteristic);
 
-//            if (BleUuid.CHAR_SAMPLE_RWN.equalsIgnoreCase(characteristic.getUuid().toString())) {
-//                final String readData4 = characteristic.getStringValue(0);
-//                Logger.i(TAG, "read data:" + readData4);
-//            }
+            if (BleUuid.CHAR_SAMPLE_RWN.equalsIgnoreCase(characteristic.getUuid().toString())) {
+                final String readData4 = characteristic.getStringValue(0);
+                Logger.i(TAG, "read data:" + readData4);
+            }
         }
     };
 
@@ -180,7 +149,7 @@ public class BtDeviceManager implements LifecycleObserver {
      *
      * @param context コンテキスト
      */
-    BtDeviceManager(Context context) {
+    private BtDeviceManager(Context context) {
         mContext = context.getApplicationContext();
         /* プリンタアダプタリスナレジスタ */
         Logger.i(TAG, "PrinterManager()- info HMPSDK : APP->SDK:  Register Listener by setListener().");
@@ -195,11 +164,11 @@ public class BtDeviceManager implements LifecycleObserver {
         return sInstance;
     }
 
-    /**
-     * 復帰
-     *
-     * @param source ライフサイクルオーナー
-     */
+//    /**
+//     * 復帰
+//     *
+//     * @param source ライフサイクルオーナー
+//     */
 //    @OnLifecycleEvent(ON_RESUME)
 //    void onResume(LifecycleOwner source) {
 //        if (source instanceof MainActivity) {
@@ -219,7 +188,8 @@ public class BtDeviceManager implements LifecycleObserver {
      */
      public Set<BluetoothDevice> getBondedDevices(){
         BluetoothManager mBtManager = (BluetoothManager) mContext.getSystemService(Context.BLUETOOTH_SERVICE);
-        mBTAdapter = mBtManager.getAdapter();
+
+        BluetoothAdapter mBTAdapter= mBtManager.getAdapter();
         return mBTAdapter.getBondedDevices();
     }
 
@@ -228,17 +198,17 @@ public class BtDeviceManager implements LifecycleObserver {
      *
      * @return Bluetooth機器
      */
-//    public synchronized BluetoothDevice getBtDevice() {
-//        return mBtDevice;
-//    }
+    public synchronized BluetoothDevice getBtDevice() {
+        return mBtDevice;
+    }
 
-    /**
-     * 接続確認
-     *
-     * 保留
-     * 参考：https://codeday.me/jp/qa/20190406/567763.html
-     * @return 接続確認結果
-     */
+//    /**
+//     * 接続確認
+//     *
+//     * 保留
+//     * 参考：https://codeday.me/jp/qa/20190406/567763.html
+//     * @return 接続確認結果
+//     */
 //    public synchronized boolean isConnected() {
 //        /* プリンタ接続を判断 */
 //        Logger.i(TAG, "isConnected()- info HMPSDK : APP->SDK:  Printer is connected by getConnection().");
@@ -260,7 +230,7 @@ public class BtDeviceManager implements LifecycleObserver {
         if ((mConnGatt == null)
                 && (mStatus == BluetoothProfile.STATE_DISCONNECTED)) {
             // try to connect
-            Toast.makeText(mContext, "Connect Start" , Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, "connecting" , Toast.LENGTH_SHORT).show();
             mConnGatt = mBtDevice.connectGatt(mContext, false, mGattcallback);
             mStatus = BluetoothProfile.STATE_CONNECTING;
         } else {
@@ -270,14 +240,11 @@ public class BtDeviceManager implements LifecycleObserver {
             }
 
             if(mStatus == BluetoothProfile.STATE_CONNECTED){
-                //write some sample
-                Toast.makeText(mContext, "Already connecting, write SAMPLE", Toast.LENGTH_SHORT).show();
-
-                if(targetChar4!=null){
-
-                    mConnGatt.readCharacteristic(targetChar4);
-                    targetChar4.setValue("Hello BLE".getBytes());
-                    mConnGatt.writeCharacteristic(targetChar4);
+                if(mTargetCharacteristic !=null){
+                    Toast.makeText(mContext, "Already connecting, write \"Hello BLE\"", Toast.LENGTH_SHORT).show();
+                    mConnGatt.readCharacteristic(mTargetCharacteristic);
+                    mTargetCharacteristic.setValue("Hello BLE".getBytes());
+                    mConnGatt.writeCharacteristic(mTargetCharacteristic);
                 }
             }else if(mStatus == BluetoothProfile.STATE_DISCONNECTED){
                 // re-connect and re-discover Services
@@ -300,8 +267,8 @@ public class BtDeviceManager implements LifecycleObserver {
 
     private void registerNotification(BluetoothGattCharacteristic mChar){
         // ペリフェラルのnotificationを有効化する。下のUUIDはCharacteristic Configuration Descriptor UUIDというもの
-        BluetoothGattDescriptor descriptor = mChar.getDescriptor(UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"));
-        Logger.i(TAG, "current descriptor :"+descriptor.getValue());
+        BluetoothGattDescriptor descriptor = mChar.getDescriptor(UUID.fromString(BleUuid.DESCRIPTOR_NOTIFICATION_ENABLED_STATE));
+        Logger.i(TAG, "current descriptor :" + new String(descriptor.getValue()));
 
         // Androidフレームワークに対してnotification通知登録を行う, falseだと解除する
         mConnGatt.setCharacteristicNotification(mChar, true);
@@ -309,5 +276,12 @@ public class BtDeviceManager implements LifecycleObserver {
         // characteristic のnotification 有効化する
         descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
         mConnGatt.writeDescriptor(descriptor);
+    }
+
+    private Handler getUiThreadHandler(){
+       if(mUiThreadHandler == null) {
+           return new Handler(mContext.getMainLooper());
+       }
+       return mUiThreadHandler;
     }
 }
