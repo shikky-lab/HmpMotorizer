@@ -15,6 +15,7 @@ import butterknife.OnClick;
 import butterknife.OnItemClick;
 import jp.co.ricoh.hmp.test.MainActivity;
 import jp.co.ricoh.hmp.test.R;
+import jp.co.ricoh.hmp.test.model.BleDeviceManager;
 import jp.co.ricoh.hmp.test.model.BtDeviceManager;
 import jp.co.ricoh.hmp.test.view.widget.BluetoothDeviceSelectListView;
 
@@ -22,6 +23,7 @@ import jp.co.ricoh.hmp.test.view.widget.BluetoothDeviceSelectListView;
  * Blueetooth接続．ペアリング接続しているものを一覧で出し，接続する．
  */
 public class BluetoothConnectFragment extends BaseFragment{
+//    final BleDeviceManager mBleDeviceManager = BleDeviceManager.getInstance();
     final BtDeviceManager mBtDeviceManager = BtDeviceManager.getInstance();
 
     @BindView(R.id.head_title)
@@ -42,6 +44,7 @@ public class BluetoothConnectFragment extends BaseFragment{
     @Override
     public void onStart() {
         super.onStart();
+//        Set<BluetoothDevice> bondedDeviceSet = mBleDeviceManager.getBondedDevices();
         Set<BluetoothDevice> bondedDeviceSet = mBtDeviceManager.getBondedDevices();
         tvTitle.setText(getResources().getString(R.string.bluetooth_other_connect_title));
         mBTDevListView.update(bondedDeviceSet);
@@ -62,6 +65,7 @@ public class BluetoothConnectFragment extends BaseFragment{
     @OnItemClick(R.id.bt_device_list)
     public void onItemClick(int position) {
         BluetoothDevice mBtDevice =  mBTDevListView.getSelectedDevice(position);
+//        mBleDeviceManager.connect(mBtDevice);
         mBtDeviceManager.connect(mBtDevice);
     }
 

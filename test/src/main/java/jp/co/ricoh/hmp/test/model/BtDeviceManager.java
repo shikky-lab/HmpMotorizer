@@ -10,14 +10,20 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
+import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.Set;
-import jp.co.ricoh.hmp.test.util.BleUuid;
 import java.util.UUID;
+
+import jp.co.ricoh.hmp.test.util.BleUuid;
 
 /**
  * Bluetooth接続機器管理(ESP32を想定)
@@ -47,7 +53,20 @@ public class BtDeviceManager implements LifecycleObserver {
      * 選択したBluetooth機器
      */
     private BluetoothDevice mBtDevice = null;
-    private BluetoothGattCharacteristic mTargetCharacteristic = null;
+
+    private ConnectThread mConnectThread;
+    private ConnectedThread mConnectedThread;
+
+    private static final UUID MY_UUID_SECURE =
+            UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+    private static final UUID MY_UUID_INSECURE =
+            UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+
+    public static final int STATE_NONE = 0;       // we're doing nothing
+    public static final int STATE_LISTEN = 1;     // now listening for incoming connections
+    public static final int STATE_CONNECTING = 2; // now initiating an outgoing connection
+    public static final int STATE_CONNECTED = 3;  // now connected to a remote device
+    private int mState;
 
 //    /**
 //     * アクテビティ
@@ -61,77 +80,7 @@ public class BtDeviceManager implements LifecycleObserver {
 
     //callback共用変数
     private int mStatus;
-    private BluetoothGatt mConnGatt;
     private Handler mUiThreadHandler = null;
-
-    private final BluetoothGattCallback mGattcallback = new BluetoothGattCallback() {
-        @Override
-        public void onConnectionStateChange(BluetoothGatt gatt, int status,
-                                            int newState) {
-            if (newState == BluetoothProfile.STATE_CONNECTED) {
-                mStatus = newState;
-                mConnGatt.discoverServices();
-
-                Runnable myRunnable = () -> Toast.makeText(mContext, "Connected" , Toast.LENGTH_SHORT).show();
-                getUiThreadHandler().post(myRunnable);
-            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                mStatus = newState;
-                Runnable myRunnable = () -> Toast.makeText(mContext, "Disconnected" , Toast.LENGTH_SHORT).show();
-                getUiThreadHandler().post(myRunnable);
-            }
-        }
-
-        @Override
-        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-            for (BluetoothGattService service : gatt.getServices()) {
-                if ((service == null) || (service.getUuid() == null)) {
-                    continue;
-                }
-                if (BleUuid.SERVICE_DEVICE_INFORMATION.equalsIgnoreCase(service
-                        .getUuid().toString())) {
-                    Logger.i(TAG, "read CHAR_MANUFACTURER_NAME_STRING:" + service.getCharacteristic(UUID.fromString(BleUuid.CHAR_MANUFACTURER_NAME_STRING)));
-                    Logger.i(TAG, "read CHAR_SERIAL_NUMBER_STRING:" + service.getCharacteristic(UUID.fromString(BleUuid.CHAR_SERIAL_NUMBER_STRING)));
-                }
-                if (BleUuid.SERVICE_SAMPLE.equalsIgnoreCase(service
-                        .getUuid().toString())) {
-                    mTargetCharacteristic = service.getCharacteristic(UUID.fromString(BleUuid.CHAR_SAMPLE_RWN));
-                    registerNotification(mTargetCharacteristic);
-                }
-            }
-        }
-
-        @Override
-        public void onCharacteristicRead(BluetoothGatt gatt,
-                                         BluetoothGattCharacteristic characteristic, int status) {
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                if (BleUuid.CHAR_SAMPLE_RWN.equalsIgnoreCase(characteristic.getUuid().toString())) {
-                    final byte[] readData = characteristic.getValue();
-                    ByteBuffer bb = ByteBuffer.wrap(readData);
-                    Logger.i(TAG, "read data:" + bb);
-                } else if (BleUuid.CHAR_SAMPLE_R.equalsIgnoreCase(characteristic.getUuid().toString())) {
-                    final byte[] readData2 = characteristic.getValue();
-                    ByteBuffer bb = ByteBuffer.wrap(readData2);
-                    final String strChar = String.valueOf(bb.getShort());
-                    Logger.i(TAG, "read data2:" + strChar);
-                }
-            }
-        }
-
-        @Override
-        public void onCharacteristicWrite(BluetoothGatt gatt,
-                                          BluetoothGattCharacteristic characteristic, int status) {
-        }
-
-        @Override
-        public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-            super.onCharacteristicChanged(gatt, characteristic);
-
-            if (BleUuid.CHAR_SAMPLE_RWN.equalsIgnoreCase(characteristic.getUuid().toString())) {
-                final String readData4 = characteristic.getStringValue(0);
-                Logger.i(TAG, "read data:" + readData4);
-            }
-        }
-    };
 
     /**
      * 初期化
@@ -224,58 +173,33 @@ public class BtDeviceManager implements LifecycleObserver {
         if (device == null) {
             return;
         }
-        if(mBtDevice != null && !device.equals(mBtDevice)){
-            mBtDevice = null;
-            mConnGatt.disconnect();
-            Toast.makeText(mContext, "Other device selected.disconnecting" + mStatus, Toast.LENGTH_SHORT).show();
-            return;
-        }
         mBtDevice = device;
 
-        //接続
-        if (mConnGatt == null){
-            // try to connect
-            Toast.makeText(mContext, "connecting" , Toast.LENGTH_SHORT).show();
-            mConnGatt = mBtDevice.connectGatt(mContext, false, mGattcallback);
-            mStatus = BluetoothProfile.STATE_CONNECTING;
-        } else {
-            if(mStatus == BluetoothProfile.STATE_CONNECTED){
-                if(mTargetCharacteristic !=null){
-                    Toast.makeText(mContext, "Already connecting, write \"Hello BLE\"", Toast.LENGTH_SHORT).show();
-                    mConnGatt.readCharacteristic(mTargetCharacteristic);
-                    mTargetCharacteristic.setValue("Hello BLE".getBytes());
-                    mConnGatt.writeCharacteristic(mTargetCharacteristic);
-                }
-            }else if(mStatus == BluetoothProfile.STATE_DISCONNECTED){
-                // re-connect and re-discover Services
-                Toast.makeText(mContext, "Re connect Start" , Toast.LENGTH_SHORT).show();
-                mConnGatt.connect();
-//                mConnGatt.discoverServices();
-            }else{
-                Toast.makeText(mContext, "Unexpected states: " + mStatus, Toast.LENGTH_SHORT).show();
+        if (mState == STATE_CONNECTING) {
+            if (mConnectThread != null) {
+                mConnectThread.cancel();
+                mConnectThread = null;
             }
         }
+
+        // Cancel any thread currently running a connection
+        if (mConnectedThread != null) {
+            mConnectedThread.cancel();
+            mConnectedThread = null;
+        }
+
+//        mConnectThread = new ConnectThread(device,false);
+        mConnectThread = new ConnectThread(device,true);
+        mConnectThread.start();
+
     }
 
     /**
      * 切断
      */
-    public synchronized void disconnect() {
-        mConnGatt.disconnect();
-    }
-
-    private void registerNotification(BluetoothGattCharacteristic mChar){
-        // ペリフェラルのnotificationを有効化する。下のUUIDはCharacteristic Configuration Descriptor UUIDというもの
-        BluetoothGattDescriptor descriptor = mChar.getDescriptor(UUID.fromString(BleUuid.DESCRIPTOR_NOTIFICATION_ENABLED_STATE));
-        Logger.i(TAG, "current descriptor :" + new String(descriptor.getValue()));
-
-        // Androidフレームワークに対してnotification通知登録を行う, falseだと解除する
-        mConnGatt.setCharacteristicNotification(mChar, true);
-
-        // characteristic のnotification 有効化する
-        descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-        mConnGatt.writeDescriptor(descriptor);
-    }
+//    public synchronized void disconnect() {
+//        mConnGatt.disconnect();
+//    }
 
     private Handler getUiThreadHandler(){
        if(mUiThreadHandler == null) {
@@ -285,21 +209,192 @@ public class BtDeviceManager implements LifecycleObserver {
     }
 
     public synchronized  void write(String sendText){
-        if(mStatus != BluetoothProfile.STATE_CONNECTED) {
-            return;
-        }
+        byte[] out = sendText.getBytes();
+        if(mConnectedThread != null){
+            mConnectedThread.write(out);
 
-        if(sendText == null){
-            sendText = "";
         }
-        mTargetCharacteristic.setValue(sendText.getBytes());
-        mConnGatt.writeCharacteristic(mTargetCharacteristic);
     }
 
     public synchronized void read(){
         if(mStatus != BluetoothProfile.STATE_CONNECTED) {
             return;
         }
-        mConnGatt.readCharacteristic(mTargetCharacteristic);
+    }
+
+    private void connectionLost() {
+        Runnable myRunnable = () -> Toast.makeText(mContext, "Device connection was lost", Toast.LENGTH_SHORT).show();
+        getUiThreadHandler().post(myRunnable);
+
+        mState = STATE_NONE;
+
+        // Start the service over to restart listening mode
+        BtDeviceManager.this.start();
+    }
+
+    private class ConnectThread extends Thread {
+        private final BluetoothSocket mmSocket;
+        private final BluetoothDevice mmDevice;
+        private String mSocketType;
+
+        public ConnectThread(BluetoothDevice device,boolean secure) {
+            // Use a temporary object that is later assigned to mmSocket,
+            // because mmSocket is final
+            BluetoothSocket tmp = null;
+            mSocketType = secure ? "Secure" : "Insecure";
+            mmDevice = device;
+
+            // Get a BluetoothSocket to connect with the given BluetoothDevice
+            try {
+                if (secure) {
+                    tmp = device.createRfcommSocketToServiceRecord(
+                            MY_UUID_SECURE);
+                } else {
+                    tmp = device.createInsecureRfcommSocketToServiceRecord(
+                            MY_UUID_INSECURE);
+                }
+            } catch (IOException e) {
+
+                Log.e(TAG, "Socket Type: " + mSocketType + "create() failed", e);
+            }
+            mmSocket = tmp;
+            mState = STATE_CONNECTING;
+        }
+
+        public void run() {
+            Log.i(TAG, "BEGIN mConnectThread SocketType:" + mSocketType);
+            setName("ConnectThread" + mSocketType);
+
+            try {
+                // Connect the device through the socket. This will block
+                // until it succeeds or throws an exception
+                mmSocket.connect();
+            } catch (IOException connectException) {
+                try {
+                    mmSocket.close();
+                } catch (IOException e2) {
+                }
+                Log.e(TAG, "unable to close() " + mSocketType +
+                        " socket during connection failure",connectException);
+                Runnable myRunnable = () -> Toast.makeText(mContext, "Failed to connect", Toast.LENGTH_SHORT).show();
+                getUiThreadHandler().post(myRunnable);
+                this.start();
+                return;
+            }
+
+            synchronized (BtDeviceManager.this) {
+                mConnectThread = null;
+            }
+            // Do work to manage the connection (in a separate thread)
+            connected(mmSocket);
+        }
+
+        /** Will cancel an in-progress connection, and close the socket */
+        public void cancel() {
+            try {
+                mmSocket.close();
+            } catch (IOException e) { }
+        }
+    }
+
+    public synchronized void start() {
+        Log.d(TAG, "start");
+
+        // Cancel any thread attempting to make a connection
+        if (mConnectThread != null) {
+            mConnectThread.cancel();
+            mConnectThread = null;
+        }
+
+        // Cancel any thread currently running a connection
+        if (mConnectedThread != null) {
+            mConnectedThread.cancel();
+            mConnectedThread = null;
+        }
+
+    }
+
+    private class ConnectedThread extends Thread {
+        private final BluetoothSocket mmSocket;
+        private final InputStream mmInStream;
+        private final OutputStream mmOutStream;
+
+        public ConnectedThread(BluetoothSocket socket) {
+            mmSocket = socket;
+            InputStream tmpIn = null;
+            OutputStream tmpOut = null;
+
+            // Get the input and output streams, using temp objects because
+            // member streams are final
+            try {
+                tmpIn = socket.getInputStream();
+                tmpOut = socket.getOutputStream();
+            } catch (IOException e) {
+                Log.e(TAG, "temp sockets not created", e);
+            }
+
+            mmInStream = tmpIn;
+            mmOutStream = tmpOut;
+            mState = STATE_CONNECTED;
+        }
+
+        public void run() {
+            byte[] buffer = new byte[1024];  // buffer store for the stream
+            int bytes; // bytes returned from read()
+
+            // Keep listening to the InputStream until an exception occurs
+            while (true) {
+                try {
+                    // Read from the InputStream
+                    bytes = mmInStream.read(buffer);
+                    if(bytes != 0){
+                        Runnable myRunnable = () -> Toast.makeText(mContext, "Read"+ new String(buffer), Toast.LENGTH_SHORT).show();
+                        getUiThreadHandler().post(myRunnable);
+                    }
+
+                } catch (IOException e) {
+                    Log.e(TAG, "disconnected", e);
+                    connectionLost();
+                    break;
+                }
+            }
+        }
+
+        /* Call this from the main activity to send data to the remote device */
+        public void write(byte[] bytes) {
+            try {
+                mmOutStream.write(bytes);
+            } catch (IOException e) { }
+        }
+
+        /* Call this from the main activity to shutdown the connection */
+        public void cancel() {
+            try {
+                mmSocket.close();
+            } catch (IOException e) { }
+        }
+    }
+    /**
+     * Start the ConnectedThread to begin managing a Bluetooth connection
+     *
+     * @param socket The BluetoothSocket on which the connection was made
+     */
+    public synchronized void connected(BluetoothSocket socket) {
+
+        // Cancel the thread that completed the connection
+        if (mConnectThread != null) {
+            mConnectThread.cancel();
+            mConnectThread = null;
+        }
+
+        // Cancel any thread currently running a connection
+        if (mConnectedThread != null) {
+            mConnectedThread.cancel();
+            mConnectedThread = null;
+        }
+
+        // Start the thread to manage the connection and perform transmissions
+        mConnectedThread = new ConnectedThread(socket);
+        mConnectedThread.start();
     }
 }

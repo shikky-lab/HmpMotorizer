@@ -1,6 +1,7 @@
 package jp.co.ricoh.hmp.test;
 
 import jp.co.ricoh.hmp.sdk.HmpService;
+import jp.co.ricoh.hmp.test.model.BleDeviceManager;
 import jp.co.ricoh.hmp.test.model.BtDeviceManager;
 import jp.co.ricoh.hmp.test.model.Logger;
 import jp.co.ricoh.hmp.test.model.PrinterManager;
@@ -25,6 +26,7 @@ public class TestApplication extends android.app.Application {
         HmpService.initialize(this);
         PrinterManager.initialize(this);
         PreferenceManager.initialize(this);
+//        BleDeviceManager.initialize(this);
         BtDeviceManager.initialize(this);
 
     }

@@ -16,7 +16,7 @@ import butterknife.OnTextChanged;
 import jp.co.ricoh.hmp.test.MainActivity;
 import jp.co.ricoh.hmp.test.MainActivity.Transition;
 import jp.co.ricoh.hmp.test.R;
-import jp.co.ricoh.hmp.test.model.BtDeviceManager;
+import jp.co.ricoh.hmp.test.model.BleDeviceManager;
 
 /**
  *
@@ -28,7 +28,7 @@ public class CheckBluetoothDeviceFragment extends BaseFragment {
 
     private static final String TAG = CheckBluetoothDeviceFragment.class.getSimpleName();
 
-    final BtDeviceManager mBtDeviceManager = BtDeviceManager.getInstance();
+    final BleDeviceManager mBleDeviceManager = BleDeviceManager.getInstance();
 
     @BindView(R.id.head_title)
     TextView tvTitle;
@@ -80,12 +80,12 @@ public class CheckBluetoothDeviceFragment extends BaseFragment {
     @OnClick(R.id.send_button)
     public void onClickSendButton() {
         String sendText = mWriteText.getText().toString();
-        mBtDeviceManager.write(sendText);
+        mBleDeviceManager.write(sendText);
     }
 
     @OnClick(R.id.send_button)
     public void onClickReadButton() {
-        mBtDeviceManager.read();
+        mBleDeviceManager.read();
     }
 
     @OnClick(R.id.iv_back)
