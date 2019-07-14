@@ -43,7 +43,7 @@ public class FunctionListFragment extends BaseFragment {
     @Override
     public void onStart() {
         super.onStart();
-        ArrayList<String> names = new ArrayList<String>();
+        ArrayList<String> names = new ArrayList<>();
         names.add(getResources().getString(R.string.function_list_connect));
         names.add(getResources().getString(R.string.function_list_text));
         names.add(getResources().getString(R.string.function_list_vtext));
@@ -56,6 +56,7 @@ public class FunctionListFragment extends BaseFragment {
         names.add(getResources().getString(R.string.function_list_bluetooth_setting));
         names.add(getResources().getString(R.string.function_list_bluetooth_device_list));
         names.add(getResources().getString(R.string.function_list_check_bluetooth_device));
+        names.add(getResources().getString(R.string.function_list_image_motorizer));
         mFunctionList.update(names);
     }
 
@@ -102,6 +103,9 @@ public class FunctionListFragment extends BaseFragment {
                 break;
             case 11:
                 CheckBluetoothDeviceFragment.startFragment(Transition.NEXT);
+                break;
+            case 12:
+                MotorizerFragment.startFragment(Transition.NEXT);
                 break;
         }
     }

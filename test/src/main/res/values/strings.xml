@@ -9,6 +9,7 @@
     <string name="device_set_title">DEVICE SETTING</string>
     <string name="device_status_title">DEVICE STATUS</string>
     <string name="photo_title">PHOTO</string>
+    <string name="image_motorizer_title">IMAGE MOTORLIZER</string>
     <string name="printer_list_title">CONNECT</string>
     <string name="qrcode_title">QRCODE</string>
     <string name="sound_setting_title">SOUND SETTING</string>
@@ -55,6 +56,7 @@
     <string name="function_list_bluetooth_setting">BLUETOOTH SETTING</string>
     <string name="function_list_bluetooth_device_list">BLUETOOTH DEVICES</string>
     <string name="function_list_check_bluetooth_device">BLUETOOTH CHECK</string>
+    <string name="function_list_image_motorizer">IMAGE MOTORIZER</string>
 
     <string name="device_status_bluetooth">Bluetooth</string>
     <string name="device_status_ink">Ink</string>
@@ -198,4 +200,8 @@
     <string name="notify_label">Notify :</string>
     <string name="send_button_label">SEND</string>
     <string name="read_button">READ</string>
+    <string name="set_to_send_to_hmp">set to send to HMP</string>
+    <string name="dots">…</string>
+    <string name="set_want_to_resize">set want to resize</string>
+    <string name="mm">mm</string>
 </resources>
