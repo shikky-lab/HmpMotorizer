@@ -3,27 +3,21 @@ package jp.co.ricoh.hmp.test.model;
 import android.arch.lifecycle.LifecycleObserver;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
-import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
-import android.bluetooth.BluetoothProfile;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
+
+import org.greenrobot.eventbus.EventBus;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.util.Set;
 import java.util.UUID;
-
-import jp.co.ricoh.hmp.test.util.BleUuid;
 
 /**
  * Bluetooth接続機器管理(ESP32を想定)
@@ -49,38 +43,21 @@ public class BtDeviceManager implements LifecycleObserver {
      */
     private final Context mContext;
 
-    /**
-     * 選択したBluetooth機器
-     */
-    private BluetoothDevice mBtDevice = null;
-
     private ConnectThread mConnectThread;
     private ConnectedThread mConnectedThread;
 
-    private static final UUID MY_UUID_SECURE =
-            UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-    private static final UUID MY_UUID_INSECURE =
+    private static final UUID SERIAL_UUID =
             UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
-    public static final int STATE_NONE = 0;       // we're doing nothing
-    public static final int STATE_LISTEN = 1;     // now listening for incoming connections
-    public static final int STATE_CONNECTING = 2; // now initiating an outgoing connection
-    public static final int STATE_CONNECTED = 3;  // now connected to a remote device
-    private int mState;
+    private enum CONNECTING_STATE{
+        NONE,// we're doing nothing
+        CONNECTING,// now initiating an outgoing connection
+        CONNECTED// now connected to a remote device
+    }
+    private  CONNECTING_STATE mState;
 
-//    /**
-//     * アクテビティ
-//     */
-//    MainActivity mActivity = null;
-
-//    /**
-//     * エラー状態
-//     */
-//    HmpCommand.DeviceStatus mError = HmpCommand.DeviceStatus.DISCONNECTED;
-
-    //callback共用変数
-    private int mStatus;
     private Handler mUiThreadHandler = null;
+    private RingBufferedBlockReader mBlockReader;
 
     /**
      * 初期化
@@ -100,8 +77,6 @@ public class BtDeviceManager implements LifecycleObserver {
      */
     private BtDeviceManager(Context context) {
         mContext = context.getApplicationContext();
-        /* プリンタアダプタリスナレジスタ */
-        Logger.i(TAG, "PrinterManager()- info HMPSDK : APP->SDK:  Register Listener by setListener().");
     }
 
     /**
@@ -143,26 +118,13 @@ public class BtDeviceManager implements LifecycleObserver {
     }
 
     /**
-     * 使用しているBluetooth機器取得
+     * 接続確認
      *
-     * @return Bluetooth機器
+     * @return 接続確認結果
      */
-    public synchronized BluetoothDevice getBtDevice() {
-        return mBtDevice;
+    public synchronized boolean isConnected() {
+        return CONNECTING_STATE.CONNECTED==mState;
     }
-
-//    /**
-//     * 接続確認
-//     *
-//     * 保留
-//     * 参考：https://codeday.me/jp/qa/20190406/567763.html
-//     * @return 接続確認結果
-//     */
-//    public synchronized boolean isConnected() {
-//        /* プリンタ接続を判断 */
-//        Logger.i(TAG, "isConnected()- info HMPSDK : APP->SDK:  Printer is connected by getConnection().");
-//        return mBtDevice != null && mBtDevice.getBondState();
-//    }
 
     /**
      * 接続
@@ -173,9 +135,11 @@ public class BtDeviceManager implements LifecycleObserver {
         if (device == null) {
             return;
         }
-        mBtDevice = device;
+        if(mState == CONNECTING_STATE.CONNECTING){
+            disConnect();
+        }
 
-        if (mState == STATE_CONNECTING) {
+        if (mState == CONNECTING_STATE.CONNECTING) {
             if (mConnectThread != null) {
                 mConnectThread.cancel();
                 mConnectThread = null;
@@ -188,18 +152,10 @@ public class BtDeviceManager implements LifecycleObserver {
             mConnectedThread = null;
         }
 
-//        mConnectThread = new ConnectThread(device,false);
-        mConnectThread = new ConnectThread(device,true);
+        mConnectThread = new ConnectThread(device);
         mConnectThread.start();
 
     }
-
-    /**
-     * 切断
-     */
-//    public synchronized void disconnect() {
-//        mConnGatt.disconnect();
-//    }
 
     private Handler getUiThreadHandler(){
        if(mUiThreadHandler == null) {
@@ -212,58 +168,65 @@ public class BtDeviceManager implements LifecycleObserver {
         byte[] out = sendText.getBytes();
         if(mConnectedThread != null){
             mConnectedThread.write(out);
-
         }
     }
+//    public synchronized String read(){
+//        if(mState != CONNECTING_STATE.CONNECTED){
+//            return null;
+//        }
+//
+//        byte[] readData = new byte[2];
+//        readData[0] =mBlockReader.read();
+//        return new String(readData);
+//    }
 
-    public synchronized void read(){
-        if(mStatus != BluetoothProfile.STATE_CONNECTED) {
-            return;
+    public synchronized String readBlock(){
+        if(mState != CONNECTING_STATE.CONNECTED){
+            return null;
         }
+        if(mBlockReader.getUnreadBlockNum() == 0){
+            Log.d(TAG,"readBlock() called but there are no blocks");
+            return null;
+        }
+
+        return new String(mBlockReader.readBlock());
     }
 
     private void connectionLost() {
-        Runnable myRunnable = () -> Toast.makeText(mContext, "Device connection was lost", Toast.LENGTH_SHORT).show();
-        getUiThreadHandler().post(myRunnable);
+        getUiThreadHandler().post(() -> Toast.makeText(mContext, "Device connection was lost", Toast.LENGTH_SHORT).show());
 
-        mState = STATE_NONE;
-
+        mState = CONNECTING_STATE.NONE;
         // Start the service over to restart listening mode
-        BtDeviceManager.this.start();
+        this.resetThreads();
+    }
+
+    private void disConnect(){
+        getUiThreadHandler().post(() -> Toast.makeText(mContext, "Disconnect current connection", Toast.LENGTH_SHORT).show());
+        mState = CONNECTING_STATE.NONE;
+        this.resetThreads();
     }
 
     private class ConnectThread extends Thread {
         private final BluetoothSocket mmSocket;
-        private final BluetoothDevice mmDevice;
-        private String mSocketType;
 
-        public ConnectThread(BluetoothDevice device,boolean secure) {
+        ConnectThread(BluetoothDevice device) {
             // Use a temporary object that is later assigned to mmSocket,
             // because mmSocket is final
             BluetoothSocket tmp = null;
-            mSocketType = secure ? "Secure" : "Insecure";
-            mmDevice = device;
 
             // Get a BluetoothSocket to connect with the given BluetoothDevice
             try {
-                if (secure) {
-                    tmp = device.createRfcommSocketToServiceRecord(
-                            MY_UUID_SECURE);
-                } else {
-                    tmp = device.createInsecureRfcommSocketToServiceRecord(
-                            MY_UUID_INSECURE);
-                }
+                tmp = device.createRfcommSocketToServiceRecord( SERIAL_UUID);
             } catch (IOException e) {
-
-                Log.e(TAG, "Socket Type: " + mSocketType + "create() failed", e);
+                Log.e(TAG,   "create() failed", e);
             }
             mmSocket = tmp;
-            mState = STATE_CONNECTING;
+            mState = CONNECTING_STATE.CONNECTING;
         }
 
         public void run() {
-            Log.i(TAG, "BEGIN mConnectThread SocketType:" + mSocketType);
-            setName("ConnectThread" + mSocketType);
+            Log.i(TAG, "BEGIN mConnectThread SocketType:") ;
+            setName("ConnectThread") ;
 
             try {
                 // Connect the device through the socket. This will block
@@ -273,11 +236,10 @@ public class BtDeviceManager implements LifecycleObserver {
                 try {
                     mmSocket.close();
                 } catch (IOException e2) {
+                    Log.e(TAG, "unable to close() socket during connection failure",e2);
                 }
-                Log.e(TAG, "unable to close() " + mSocketType +
-                        " socket during connection failure",connectException);
-                Runnable myRunnable = () -> Toast.makeText(mContext, "Failed to connect", Toast.LENGTH_SHORT).show();
-                getUiThreadHandler().post(myRunnable);
+                Log.e(TAG, "unable to connect() socket during connection failure",connectException);
+                getUiThreadHandler().post(() -> Toast.makeText(mContext, "Failed to connect", Toast.LENGTH_SHORT).show());
                 this.start();
                 return;
             }
@@ -290,15 +252,21 @@ public class BtDeviceManager implements LifecycleObserver {
         }
 
         /** Will cancel an in-progress connection, and close the socket */
-        public void cancel() {
+        void cancel() {
             try {
                 mmSocket.close();
-            } catch (IOException e) { }
+            } catch (IOException ignored) { }
         }
     }
 
-    public synchronized void start() {
-        Log.d(TAG, "start");
+    private synchronized void resetThreads() {
+        Log.d(TAG, "resetThreads");
+
+        // Cancel any thread currently running a connection
+        if (mConnectedThread != null) {
+            mConnectedThread.cancel();
+            mConnectedThread = null;
+        }
 
         // Cancel any thread attempting to make a connection
         if (mConnectThread != null) {
@@ -306,11 +274,6 @@ public class BtDeviceManager implements LifecycleObserver {
             mConnectThread = null;
         }
 
-        // Cancel any thread currently running a connection
-        if (mConnectedThread != null) {
-            mConnectedThread.cancel();
-            mConnectedThread = null;
-        }
 
     }
 
@@ -319,7 +282,7 @@ public class BtDeviceManager implements LifecycleObserver {
         private final InputStream mmInStream;
         private final OutputStream mmOutStream;
 
-        public ConnectedThread(BluetoothSocket socket) {
+        ConnectedThread(BluetoothSocket socket) {
             mmSocket = socket;
             InputStream tmpIn = null;
             OutputStream tmpOut = null;
@@ -335,7 +298,8 @@ public class BtDeviceManager implements LifecycleObserver {
 
             mmInStream = tmpIn;
             mmOutStream = tmpOut;
-            mState = STATE_CONNECTED;
+            mBlockReader = new RingBufferedBlockReader();
+            mState = CONNECTING_STATE.CONNECTED;
         }
 
         public void run() {
@@ -347,9 +311,11 @@ public class BtDeviceManager implements LifecycleObserver {
                 try {
                     // Read from the InputStream
                     bytes = mmInStream.read(buffer);
-                    if(bytes != 0){
-                        Runnable myRunnable = () -> Toast.makeText(mContext, "Read"+ new String(buffer), Toast.LENGTH_SHORT).show();
-                        getUiThreadHandler().post(myRunnable);
+                    mBlockReader.write(buffer,bytes);
+                    Event.post(Event.HAVE_READ_CHARACTER);
+                    if(mBlockReader.getUnreadBlockNum() >0){
+                        Event.post(Event.HAVE_READ_BLOCK);
+                        Log.d(TAG,"read a block");
                     }
 
                 } catch (IOException e) {
@@ -361,17 +327,17 @@ public class BtDeviceManager implements LifecycleObserver {
         }
 
         /* Call this from the main activity to send data to the remote device */
-        public void write(byte[] bytes) {
+        void write(byte[] bytes) {
             try {
                 mmOutStream.write(bytes);
-            } catch (IOException e) { }
+            } catch (IOException ignored) { }
         }
 
         /* Call this from the main activity to shutdown the connection */
-        public void cancel() {
+        void cancel() {
             try {
                 mmSocket.close();
-            } catch (IOException e) { }
+            } catch (IOException ignored) { }
         }
     }
     /**
@@ -379,7 +345,7 @@ public class BtDeviceManager implements LifecycleObserver {
      *
      * @param socket The BluetoothSocket on which the connection was made
      */
-    public synchronized void connected(BluetoothSocket socket) {
+    private synchronized void connected(BluetoothSocket socket) {
 
         // Cancel the thread that completed the connection
         if (mConnectThread != null) {
@@ -396,5 +362,92 @@ public class BtDeviceManager implements LifecycleObserver {
         // Start the thread to manage the connection and perform transmissions
         mConnectedThread = new ConnectedThread(socket);
         mConnectedThread.start();
+
+        getUiThreadHandler().post(() -> Toast.makeText(mContext, "Connected!!", Toast.LENGTH_SHORT).show());
     }
+
+    public enum Event {
+        CONNECTED,
+        DISCONNECTED,
+        HAVE_READ_BLOCK,
+        HAVE_READ_CHARACTER;
+
+        /**
+         * イベント送信
+         *
+         * @param event イベント
+         */
+        static void post(Event event) {
+            EventBus.getDefault().post(event);
+        }
+    }
+
+    private class RingBufferedBlockReader {
+        private static final int DEFAULT_BUF_SIZE=1024;
+        private int mMax;
+        private byte[] buf;
+        private int readPos;//次に読み込む位置
+        private int writePos;//次に書き込む位置
+        private static final byte DEFAULT_EOL = ';';
+        private byte eol = DEFAULT_EOL;
+        private int unreadBlockNum=0;
+
+        RingBufferedBlockReader(){
+            this(DEFAULT_BUF_SIZE);
+        }
+
+        RingBufferedBlockReader(int bufSize){
+           mMax=bufSize;
+           buf=new byte[mMax];
+        }
+
+        private int getNextPos(int curPos){
+            if(curPos == mMax){
+                return 0;
+            }
+            return curPos+1;
+        }
+
+        void write(byte[] in, int length){
+            for(int i=0;i<length;i++){
+                if(in[i]=='\0'){
+                    return;
+                }
+                buf[writePos]=in[i];
+                writePos = getNextPos(writePos);
+                if(in[i]==eol){
+                    unreadBlockNum++;
+                }
+            }
+        }
+
+        byte read(){
+            byte ret = buf[readPos];
+            readPos= getNextPos(readPos);
+            return ret;
+        }
+
+        byte[] readBlock(){
+            byte[] ret = new byte[mMax];
+            if(unreadBlockNum ==0){
+                return null;
+            }
+
+            int i;
+            for(i=0;;i++){
+                ret[i] = this.read();
+                if(ret[i]==eol){
+                    unreadBlockNum--;
+                    break;
+                }
+            }
+            ret[i+1] = '\0';
+            return ret;
+        }
+
+        int getUnreadBlockNum(){
+            return unreadBlockNum;
+        }
+    }
+
 }
