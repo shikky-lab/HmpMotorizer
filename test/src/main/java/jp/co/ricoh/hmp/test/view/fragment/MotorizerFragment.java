@@ -22,6 +22,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -31,9 +32,11 @@ import butterknife.OnClick;
 import butterknife.OnFocusChange;
 import jp.co.ricoh.hmp.sdk.image.HmpImage;
 import jp.co.ricoh.hmp.sdk.image.HmpImageFactory;
+import jp.co.ricoh.hmp.sdk.printer.HmpCommand;
 import jp.co.ricoh.hmp.sdk.printer.HmpSettings;
 import jp.co.ricoh.hmp.test.MainActivity;
 import jp.co.ricoh.hmp.test.R;
+import jp.co.ricoh.hmp.test.model.BtDeviceManager;
 import jp.co.ricoh.hmp.test.model.HmpConstants;
 import jp.co.ricoh.hmp.test.model.Logger;
 import jp.co.ricoh.hmp.test.model.PrinterManager;
@@ -55,6 +58,7 @@ public class MotorizerFragment extends BaseFragment {
      * プリンタデバイス管理
      */
     final PrinterManager mPrinterManager = PrinterManager.getInstance();
+    final BtDeviceManager mBtDeviceManager = BtDeviceManager.getInstance();
 
     private static final int RESULT_PICK_IMAGEFILE = 1000;
     private static final int MAX_WIDTH=120;
@@ -269,6 +273,23 @@ public class MotorizerFragment extends BaseFragment {
         }
     };
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onHaveRead(BtDeviceManager.Event event){
+        switch (event){
+            case HAVE_READ_BLOCK:
+                String readData = mBtDeviceManager.readBlock();
+                Toast.makeText(this.getContext(), "called onHaveRead", Toast.LENGTH_SHORT).show();
+                break;
+            case HAVE_READ_CHARACTER:
+                break;
+            case CONNECTED:
+            case DISCONNECTED:
+                break;
+            default:
+                break;
+        }
+    }
+
     @OnClick(R.id.print_button)
     public void OnClickPrintButton(View v)
     {
@@ -284,8 +305,16 @@ public class MotorizerFragment extends BaseFragment {
             return;
         }
 
-        int width = 90 * HmpConstants.DPI*10 / 254;    /* mm To px */
-        int height = 60 * HmpConstants.DPI*10 / 254;       /* mm To px */
+        int width=0;
+        int height=0;
+        try{
+            width = Integer.parseInt(widthEditText.getText().toString());
+            height = Integer.parseInt(widthEditText.getText().toString());
+        }catch (NumberFormatException e){
+            Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(),"please input digit",Toast.LENGTH_SHORT).show();
+        }
+        width = width * HmpConstants.DPI*10 / 254;    /* mm To px */
+        height = height * HmpConstants.DPI*10 / 254;       /* mm To px */
 
         if (mHmpImage != null) {
             /* 設定する画像の幅と高さにより、画像を拡縮する */
@@ -423,6 +452,9 @@ public class MotorizerFragment extends BaseFragment {
         switch (event) {
             case JOB_STARTED:
                 Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(),getResources().getString(R.string.message_print_start),Toast.LENGTH_SHORT).show();
+                int width = Integer.parseInt(widthEditText.getText().toString());
+                int height = Integer.parseInt(heightEditText.getText().toString());
+                mBtDeviceManager.write("s:"+"x"+String.format("%03d",width)+"y"+String.format("%03d",height));
                 break;
             case JOB_ENDED:
                 Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(),getResources().getString(R.string.message_print_complete),Toast.LENGTH_SHORT).show();
@@ -430,6 +462,11 @@ public class MotorizerFragment extends BaseFragment {
             case JOB_CANCELED:
                 Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(),getResources().getString(R.string.message_print_cancel),Toast.LENGTH_SHORT).show();
                 break;
+            case UPDATE_STATUS:
+                HmpCommand.DeviceStatus mError = mPrinterManager.getError();
+                Log.d(TAG,"status changed:"+ mError.toString());
+                break;
+
             default:
                 break;
         }
