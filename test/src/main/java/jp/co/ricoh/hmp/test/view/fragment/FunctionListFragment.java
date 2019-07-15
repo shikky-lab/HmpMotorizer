@@ -57,6 +57,7 @@ public class FunctionListFragment extends BaseFragment {
         names.add(getResources().getString(R.string.function_list_bluetooth_device_list));
         names.add(getResources().getString(R.string.function_list_check_bluetooth_device));
         names.add(getResources().getString(R.string.function_list_image_motorizer));
+        names.add(getResources().getString(R.string.function_list_line_motorizer));
         mFunctionList.update(names);
     }
 
@@ -105,7 +106,10 @@ public class FunctionListFragment extends BaseFragment {
                 CheckBluetoothDeviceFragment.startFragment(Transition.NEXT);
                 break;
             case 12:
-                MotorizerFragment.startFragment(Transition.NEXT);
+                ImageMotorizerFragment.startFragment(Transition.NEXT);
+                break;
+            case 13:
+                LineMotorizerFragment.startFragment(Transition.NEXT);
                 break;
         }
     }

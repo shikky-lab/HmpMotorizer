@@ -47,12 +47,12 @@ import static android.app.Activity.RESULT_OK;
 
 /**
  */
-public class MotorizerFragment extends BaseFragment {
+public class LineMotorizerFragment extends BaseFragment {
 
     /**
      * タグ
      */
-    private static final String TAG = MotorizerFragment.class.getSimpleName();
+    private static final String TAG = LineMotorizerFragment.class.getSimpleName();
 
     /**
      * プリンタデバイス管理
@@ -61,8 +61,9 @@ public class MotorizerFragment extends BaseFragment {
     final BtDeviceManager mBtDeviceManager = BtDeviceManager.getInstance();
 
     private static final int RESULT_PICK_IMAGEFILE = 1000;
-    private static final int MAX_WIDTH=120;
-    private static final int MAX_HEIGHT=120;
+//    private static final int MAX_WIDTH=600;
+    private static final int MAX_WIDTH=10000;
+    private static final int MAX_HEIGHT=13;
     private static final String digitRegex = "\\d+";
 
     /**
@@ -90,9 +91,9 @@ public class MotorizerFragment extends BaseFragment {
     HmpImage mHmpImage = null;
 
     /**
-     * イメージタイプ
+     * イメージタイプ.サイズ制限がどこでかかるか分からないため，念のためTEXT指定．
      */
-    HmpImage.ImageType imageType = HmpImage.ImageType.GRAPHIC;
+    HmpImage.ImageType imageType = HmpImage.ImageType.TEXT;
 
     /**
      * 部数
@@ -111,12 +112,12 @@ public class MotorizerFragment extends BaseFragment {
      * @param transition 遷移種別
      */
     public static void startFragment(MainActivity.Transition transition) {
-        MainActivity.TransactionEvent.post(transition, new MotorizerFragment());
+        MainActivity.TransactionEvent.post(transition, new LineMotorizerFragment());
     }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_motorizer, container, false);
+        return inflater.inflate(R.layout.fragment_line_motorizer, container, false);
     }
 
     @Override
@@ -265,9 +266,9 @@ public class MotorizerFragment extends BaseFragment {
                         Timber.w("onReceive() - warning : data is not validate.");
                         return;
                     }
-                    HmpSettings mSettings = new HmpSettings(mPreferenceManager.getPosition(), HmpSettings.Direction.RIGHT, HmpSettings.Pass.MULTI, HmpSettings.Theta.ENABLE);
+                    HmpSettings mSettings = new HmpSettings(mPreferenceManager.getPosition(), HmpSettings.Direction.RIGHT, HmpSettings.Pass.MULTI, HmpSettings.Theta.DISABLE);
 
-                    mPrinterManager.print(mImages, mSettings, copies);
+//                    mPrinterManager.print(mImages, mSettings, copies);
                     break;
             }
         }
@@ -295,11 +296,11 @@ public class MotorizerFragment extends BaseFragment {
     {
         mImages.clear();
 
-        if (!mPrinterManager.isConnected()) {
-            Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(),getResources().getString(R.string.message_connect_device),Toast.LENGTH_SHORT).show();
-//            PrinterListFragment.startFragment(MainActivity.Transition.NEXT,getResources().getString(R.string.photo_categray));
-            return;
-        }
+//        if (!mPrinterManager.isConnected()) {
+//            Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(),getResources().getString(R.string.message_connect_device),Toast.LENGTH_SHORT).show();
+////            PrinterListFragment.startFragment(MainActivity.Transition.NEXT,getResources().getString(R.string.photo_categray));
+//            return;
+//        }
 
         if (checkPrintEnable()) {
             return;
@@ -309,7 +310,7 @@ public class MotorizerFragment extends BaseFragment {
         int height=0;
         try{
             width = Integer.parseInt(widthEditText.getText().toString());
-            height = Integer.parseInt(widthEditText.getText().toString());
+            height = Integer.parseInt(heightEditText.getText().toString());
         }catch (NumberFormatException e){
             Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(),"please input digit",Toast.LENGTH_SHORT).show();
         }
