@@ -5,12 +5,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Rect;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,6 +38,7 @@ import butterknife.OnClick;
 import butterknife.OnFocusChange;
 import jp.co.ricoh.hmp.sdk.image.HmpImage;
 import jp.co.ricoh.hmp.sdk.image.HmpImageFactory;
+import jp.co.ricoh.hmp.sdk.image.generator.Text;
 import jp.co.ricoh.hmp.sdk.printer.HmpCommand;
 import jp.co.ricoh.hmp.sdk.printer.HmpSettings;
 import jp.co.ricoh.hmp.test.MainActivity;
@@ -43,7 +50,10 @@ import jp.co.ricoh.hmp.test.model.PrinterManager;
 import jp.co.ricoh.hmp.test.view.widget.CopiesEdit;
 import timber.log.Timber;
 
+import android.text.style.AbsoluteSizeSpan;
+
 import static android.app.Activity.RESULT_OK;
+import static android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT;
 
 /**
  */
@@ -61,8 +71,9 @@ public class LineMotorizerFragment extends BaseFragment {
     final BtDeviceManager mBtDeviceManager = BtDeviceManager.getInstance();
 
     private static final int RESULT_PICK_IMAGEFILE = 1000;
-//    private static final int MAX_WIDTH=600;
-    private static final int MAX_WIDTH=10000;
+    private static final int MAX_WIDTH=700;//公証594だが，700くらいまではいけた．1000だとダメだった．なお，サイレントで失敗するので厄介．
+    private static final int MAX_TEXT_WIDTH=594;//こっちは700でダメだった．
+//    private static final int MAX_WIDTH=10000;
     private static final int MAX_HEIGHT=13;
     private static final String digitRegex = "\\d+";
 
@@ -84,6 +95,12 @@ public class LineMotorizerFragment extends BaseFragment {
     @BindView(R.id.height)
     EditText heightEditText;
 
+    @BindView(R.id.inputEditText)
+    EditText inputEditText;
+
+    @BindView(R.id.fontSizeEditText)
+    EditText fontSizeEditText;
+
     ArrayList<HmpImage> mImages = new ArrayList<>();
 
     Bitmap mBitmap = null;
@@ -91,14 +108,16 @@ public class LineMotorizerFragment extends BaseFragment {
     HmpImage mHmpImage = null;
 
     /**
-     * イメージタイプ.サイズ制限がどこでかかるか分からないため，念のためTEXT指定．
+     * 画像の種類を指定？GRAPHIC_LINE指定すると線画になる．サイズ制限とは無関係っぽい．
      */
-    HmpImage.ImageType imageType = HmpImage.ImageType.TEXT;
+    HmpImage.ImageType imageType = HmpImage.ImageType.GRAPHIC;
 
     /**
      * 部数
      */
     int mCopies = 1;
+
+    boolean fromText=false;
 
     /**
      * 部数エディット
@@ -231,6 +250,88 @@ public class LineMotorizerFragment extends BaseFragment {
         }
     }
 
+    @OnClick(R.id.generate_button)
+    void generateImageFromText(){
+        String inputText = inputEditText.getText().toString();
+        if(inputText.equals("")){
+            Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(), "please input texts", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        updateBitmap(inputText);
+        fromText=true;
+    }
+
+    private void updateBitmap(String strText){
+        mImages.clear();
+        Bitmap map = null;
+        Bitmap line = null;
+
+        int fontSize= Integer.parseInt(fontSizeEditText.getText().toString());
+        if(fontSize<6 || 36<fontSize){
+            Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(), "set font size between 6 to 36", Toast.LENGTH_SHORT).show();
+            return;
+        }
+//        int fontSize = 12 * HmpConstants.DPI / HmpConstants.FONT_PT_DENOMINATOR;   /* フォントサイズ：12．*/
+        fontSize = fontSize * HmpConstants.DPI / HmpConstants.FONT_PT_DENOMINATOR;   /* フォントサイズ：12．*/
+        AbsoluteSizeSpan sizeSpan = new AbsoluteSizeSpan(fontSize);
+        SpannableStringBuilder spannable = new SpannableStringBuilder();
+        spannable.setSpan(sizeSpan, 0, 0, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+        spannable.setSpan(sizeSpan, spannable.length(), spannable.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+        spannable.append(strText);
+        spannable.setSpan(sizeSpan, spannable.getSpanStart(sizeSpan), spannable.getSpanEnd(sizeSpan), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        spannable.append('\n');
+        spannable.setSpan(sizeSpan, spannable.getSpanStart(sizeSpan), spannable.getSpanEnd(sizeSpan), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+//        spannable.setSpan(sizeSpan, 0, spannable.length(), Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+
+//        int size = strText.length()*fontSize;//フォントによって同じサイズでも大きさ変わる気がするので，この指定法はダメな気がする．．．
+
+        int size=MAX_TEXT_WIDTH* HmpConstants.DPI*10/254;
+        boolean omitted = false;//これをtrueにしておくと，文字後の空白を除去してくれるらしい．つまりサイズに合わせてクロッピングしてくれる．
+
+        /* テキスト画像生成 */
+        Logger.i(TAG, "generateTextImages()- info HMPSDK : APP->SDK: Generate text image by generateTextImages().");
+        mImages = HmpImageFactory.generateTextImages(spannable, size, omitted, null, Text.Gravity.TOP);
+        if(mImages.size()>1){
+            Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(), "Failed to generate.Reduce characters", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        /* UIで表示する画像を生成 */
+        Logger.i(TAG, "generateTextImages()- info HMPSDK : APP->SDK: Generate text bitmap by getBitmap().");
+        map = mImages.get(0).getBitmap();
+        if (map == null) {
+            Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(), getResources().getString(R.string.qrcode_image_not_created), Toast.LENGTH_SHORT).show();
+        }
+
+        int height = Objects.requireNonNull(map).getHeight() * getResources().getDisplayMetrics().densityDpi / HmpConstants.DPI;
+        int width = map.getWidth() * getResources().getDisplayMetrics().densityDpi / HmpConstants.DPI;
+        GradientDrawable background = new GradientDrawable(LEFT_RIGHT, new int[]{0x00FFFFFF, 0xFFFFFFFF});
+        if (width > mImage.getWidth()) {
+            width = mImage.getWidth();
+            line = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(line);
+            canvas.drawColor(Color.TRANSPARENT);
+            canvas.drawBitmap(
+                    map,
+                    new Rect(0, 0, width * map.getHeight() / height, map.getHeight()),
+                    new Rect(0, 0, width, height),
+                    null);
+            background.setBounds((width - height * 2), 0, width, height);
+            background.draw(canvas);
+        } else {
+            line = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(line);
+            canvas.drawColor(Color.TRANSPARENT);
+            canvas.drawBitmap(
+                    map,
+                    new Rect(0, 0, map.getWidth(), map.getHeight()),
+                    new Rect(0, 0, line.getWidth(), line.getHeight()),
+                    null);
+        }
+
+        mImage.setImageBitmap(line);
+    }
+
     /**
      * リスナー
      */
@@ -266,9 +367,9 @@ public class LineMotorizerFragment extends BaseFragment {
                         Timber.w("onReceive() - warning : data is not validate.");
                         return;
                     }
-                    HmpSettings mSettings = new HmpSettings(mPreferenceManager.getPosition(), HmpSettings.Direction.RIGHT, HmpSettings.Pass.MULTI, HmpSettings.Theta.DISABLE);
-
-//                    mPrinterManager.print(mImages, mSettings, copies);
+                    HmpSettings mSettings = new HmpSettings(mPreferenceManager.getPosition(), HmpSettings.Direction.RIGHT, HmpSettings.Pass.SINGLE, HmpSettings.Theta.DISABLE);
+                    mPrinterManager.print(mImages, mSettings, copies);
+                    Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(),"Sending...",Toast.LENGTH_LONG).show();
                     break;
             }
         }
@@ -294,34 +395,48 @@ public class LineMotorizerFragment extends BaseFragment {
     @OnClick(R.id.print_button)
     public void OnClickPrintButton(View v)
     {
-        mImages.clear();
+        //noinspection PointlessBooleanExpression
+        if (fromText == true) {
+            int copies = mCopiesEdit.getCopies();
+            if (copies < 1 || copies > 999) {
+                Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(), getResources().getString(R.string.message_value_invalid), Toast.LENGTH_LONG).show();
+                Timber.w("onReceive() - warning : data is not validate.");
+                return;
+            }
+            HmpSettings mSettings = new HmpSettings(mPreferenceManager.getPosition(), HmpSettings.Direction.RIGHT, HmpSettings.Pass.SINGLE, HmpSettings.Theta.DISABLE);
+            mPrinterManager.print(mImages, mSettings, copies);
+            Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(),"Sending...",Toast.LENGTH_LONG).show();
 
-//        if (!mPrinterManager.isConnected()) {
-//            Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(),getResources().getString(R.string.message_connect_device),Toast.LENGTH_SHORT).show();
-////            PrinterListFragment.startFragment(MainActivity.Transition.NEXT,getResources().getString(R.string.photo_categray));
-//            return;
-//        }
+        }else {
+            mImages.clear();
 
-        if (checkPrintEnable()) {
-            return;
-        }
+            //        if (!mPrinterManager.isConnected()) {
+            //            Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(),getResources().getString(R.string.message_connect_device),Toast.LENGTH_SHORT).show();
+            ////            PrinterListFragment.startFragment(MainActivity.Transition.NEXT,getResources().getString(R.string.photo_categray));
+            //            return;
+            //        }
 
-        int width=0;
-        int height=0;
-        try{
-            width = Integer.parseInt(widthEditText.getText().toString());
-            height = Integer.parseInt(heightEditText.getText().toString());
-        }catch (NumberFormatException e){
-            Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(),"please input digit",Toast.LENGTH_SHORT).show();
-        }
-        width = width * HmpConstants.DPI*10 / 254;    /* mm To px */
-        height = height * HmpConstants.DPI*10 / 254;       /* mm To px */
+            if (checkPrintEnable()) {
+                return;
+            }
 
-        if (mHmpImage != null) {
-            /* 設定する画像の幅と高さにより、画像を拡縮する */
-            /* SDK側で画像を拡縮した後に、アプリ側へPROCESSEDを通知する */
-            Logger.i(TAG, "OnClickPrintButton()- info HMPSDK : APP->SDK: Resize Image by resize().");
-            mHmpImage.resize(width, height, mListener);
+            int width = 0;
+            int height = 0;
+            try {
+                width = Integer.parseInt(widthEditText.getText().toString());
+                height = Integer.parseInt(heightEditText.getText().toString());
+            } catch (NumberFormatException e) {
+                Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(), "please input digit", Toast.LENGTH_SHORT).show();
+            }
+            width = width * HmpConstants.DPI * 10 / 254;    /* mm To px */
+            height = height * HmpConstants.DPI * 10 / 254;       /* mm To px */
+
+            if (mHmpImage != null) {
+                /* 設定する画像の幅と高さにより、画像を拡縮する */
+                /* SDK側で画像を拡縮した後に、アプリ側へPROCESSEDを通知する */
+                Logger.i(TAG, "OnClickPrintButton()- info HMPSDK : APP->SDK: Resize Image by resize().");
+                mHmpImage.resize(width, height, mListener);
+            }
         }
     }
 
@@ -364,6 +479,7 @@ public class LineMotorizerFragment extends BaseFragment {
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("image/*");
         startActivityForResult(intent,RESULT_PICK_IMAGEFILE);
+        fromText=false;
     }
 
     @Override
@@ -453,9 +569,6 @@ public class LineMotorizerFragment extends BaseFragment {
         switch (event) {
             case JOB_STARTED:
                 Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(),getResources().getString(R.string.message_print_start),Toast.LENGTH_SHORT).show();
-                int width = Integer.parseInt(widthEditText.getText().toString());
-                int height = Integer.parseInt(heightEditText.getText().toString());
-                mBtDeviceManager.write("s:"+"x"+String.format("%03d",width)+"y"+String.format("%03d",height));
                 break;
             case JOB_ENDED:
                 Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(),getResources().getString(R.string.message_print_complete),Toast.LENGTH_SHORT).show();
@@ -463,11 +576,14 @@ public class LineMotorizerFragment extends BaseFragment {
             case JOB_CANCELED:
                 Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(),getResources().getString(R.string.message_print_cancel),Toast.LENGTH_SHORT).show();
                 break;
-            case UPDATE_STATUS:
+            case UPDATE_STATUS://JOB_STARTEDの直後にUPDATE_STATUSが飛んできて，その際のerrorは"PRINTING".あとこれボタン押すたびに飛んでくるっぽい？
+            case STATUS_CHANGED:
                 HmpCommand.DeviceStatus mError = mPrinterManager.getError();
-                Log.d(TAG,"status changed:"+ mError.toString());
+                Logger.i(TAG,"status changed:"+ mError.toString());
                 break;
-
+            case PRINTED_PASS://PRINTED_PAGEとの使い分けは謎だが，1パス終了時にどっちも飛んでくるので，ここではこっちを使用．
+                Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(),"Printed one line",Toast.LENGTH_SHORT).show();
+                break;
             default:
                 break;
         }

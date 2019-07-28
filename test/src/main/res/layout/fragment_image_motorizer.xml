@@ -34,6 +34,24 @@
                 android:layout_toEndOf="@+id/selectImageLabel"
                 android:text="@string/dots" />
 
+            <TextView
+                android:id="@+id/line_title"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:text="@string/photo_line_drawing"
+                android:layout_alignBottom="@id/selectImageLabel"
+                android:layout_toEndOf="@+id/reference_button"
+                android:gravity="center_vertical"
+                android:textColor="#000000"
+                android:textSize="18sp"/>
+            <Switch
+                android:id="@+id/line_switch"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:layout_alignBottom="@id/selectImageLabel"
+                android:layout_toEndOf="@+id/line_title"
+                android:layout_gravity="center_vertical"/>
+
             <ImageView
                 android:id="@+id/image"
                 android:layout_width="match_parent"

@@ -18,6 +18,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -64,6 +65,7 @@ public class ImageMotorizerFragment extends BaseFragment {
     private static final int MAX_WIDTH=120;
     private static final int MAX_HEIGHT=120;
     private static final String digitRegex = "\\d+";
+    private String imageFilePath=null;
 
     /**
      * 画像
@@ -82,6 +84,9 @@ public class ImageMotorizerFragment extends BaseFragment {
 
     @BindView(R.id.height)
     EditText heightEditText;
+
+    @BindView(R.id.line_switch)
+    Switch lineSwitch;
 
     ArrayList<HmpImage> mImages = new ArrayList<>();
 
@@ -138,7 +143,9 @@ public class ImageMotorizerFragment extends BaseFragment {
     @Override
     public void onResume() {
         super.onResume();
-//        HmpImageFactory.createImageFromFile(path, mListener);
+        if(imageFilePath != null){
+            HmpImageFactory.createImageFromFile(imageFilePath, mListener);
+        }
     }
 
     @OnFocusChange(value = R.id.width)
@@ -268,6 +275,7 @@ public class ImageMotorizerFragment extends BaseFragment {
                     HmpSettings mSettings = new HmpSettings(mPreferenceManager.getPosition(), HmpSettings.Direction.RIGHT, HmpSettings.Pass.MULTI, HmpSettings.Theta.ENABLE);
 
                     mPrinterManager.print(mImages, mSettings, copies);
+                    Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(),"Sending...",Toast.LENGTH_LONG).show();
                     break;
             }
         }
@@ -334,6 +342,17 @@ public class ImageMotorizerFragment extends BaseFragment {
     {
         FunctionListFragment.startFragment(MainActivity.Transition.BACK);
     }
+    @OnClick(R.id.line_switch)
+    public void OnClickLineSwitch(){
+        if (lineSwitch.isChecked()){
+            imageType = HmpImage.ImageType.GRAPHIC_LINE;
+        } else {
+            imageType = HmpImage.ImageType.GRAPHIC;
+        }
+        if(imageFilePath!=null){
+            mHmpImage = HmpImageFactory.createImageFromFile(imageFilePath, mListener);
+        }
+    }
 
     @Override
     public boolean onBackPressed() {
@@ -375,8 +394,8 @@ public class ImageMotorizerFragment extends BaseFragment {
                     return;
                 }
                 Uri uri = resultData.getData();
-                String path = getPathFromUri(this.getContext(), Objects.requireNonNull(uri));
-                HmpImageFactory.createImageFromFile(Objects.requireNonNull(path), mListener);
+                imageFilePath = getPathFromUri(this.getContext(), Objects.requireNonNull(uri));
+                HmpImageFactory.createImageFromFile(Objects.requireNonNull(imageFilePath), mListener);
                 break;
         }
 
@@ -454,19 +473,22 @@ public class ImageMotorizerFragment extends BaseFragment {
                 Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(),getResources().getString(R.string.message_print_start),Toast.LENGTH_SHORT).show();
                 int width = Integer.parseInt(widthEditText.getText().toString());
                 int height = Integer.parseInt(heightEditText.getText().toString());
-                mBtDeviceManager.write("s:"+"x"+String.format("%03d",width)+"y"+String.format("%03d",height));
+                mBtDeviceManager.write("s:"+"x"+String.format("%03d",width)+"y"+String.format("%03d",height)+";");
                 break;
-            case JOB_ENDED:
+            case JOB_ENDED://画像出力後．下記のPRINTED_PASS,PRINTED_PAGEの直後に飛んでくる．おそらく複数コピーの場合は一番最後に飛んでくる？
                 Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(),getResources().getString(R.string.message_print_complete),Toast.LENGTH_SHORT).show();
                 break;
             case JOB_CANCELED:
                 Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(),getResources().getString(R.string.message_print_cancel),Toast.LENGTH_SHORT).show();
                 break;
             case UPDATE_STATUS:
+            case STATUS_CHANGED:
                 HmpCommand.DeviceStatus mError = mPrinterManager.getError();
                 Log.d(TAG,"status changed:"+ mError.toString());
                 break;
-
+            case PRINTED_PASS://マルチパスで画像を出力した場合も，すべての印刷が完了後に飛んでくる．
+            case PRINTED_PAGE://画像を出力した場合，結局↑のPRINTED_PASSの直後に飛んでくる．部数が複数のときもどっちも飛んでくる．謎．
+                break;
             default:
                 break;
         }
