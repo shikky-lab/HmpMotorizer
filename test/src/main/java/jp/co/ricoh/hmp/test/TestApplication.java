@@ -1,7 +1,6 @@
 package jp.co.ricoh.hmp.test;
 
 import jp.co.ricoh.hmp.sdk.HmpService;
-import jp.co.ricoh.hmp.test.model.BleDeviceManager;
 import jp.co.ricoh.hmp.test.model.BtDeviceManager;
 import jp.co.ricoh.hmp.test.model.Logger;
 import jp.co.ricoh.hmp.test.model.PrinterManager;
