@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+   <array name = "pokemon_array" >
+       <item>@drawable/poke001</item>
+       <item>@drawable/poke002</item>
+       <item>@drawable/poke003</item>
+       <item>@drawable/poke004</item>
+       <item>@drawable/poke005</item>
+       <item>@drawable/poke006</item>
+       <item>@drawable/poke007</item>
+       <item>@drawable/poke008</item>
+       <item>@drawable/poke009</item>
+       <item>@drawable/poke010</item>
+       <item>@drawable/poke011</item>
+       <item>@drawable/poke012</item>
+       <item>@drawable/poke013</item>
+       <item>@drawable/poke014</item>
+       <item>@drawable/poke015</item>
+       <item>@drawable/poke016</item>
+       <item>@drawable/poke017</item>
+       <item>@drawable/poke018</item>
+       <item>@drawable/poke019</item>
+       <item>@drawable/poke020</item>
+       <item>@drawable/poke021</item>
+       <item>@drawable/poke022</item>
+       <item>@drawable/poke023</item>
+       <item>@drawable/poke024</item>
+       <item>@drawable/poke025</item>
+       <item>@drawable/poke026</item>
+       <item>@drawable/poke027</item>
+       <item>@drawable/poke028</item>
+       <item>@drawable/poke029</item>
+       <item>@drawable/poke030</item>
+       <item>@drawable/poke031</item>
+       <item>@drawable/poke032</item>
+       <item>@drawable/poke033</item>
+       <item>@drawable/poke034</item>
+       <item>@drawable/poke035</item>
+       <item>@drawable/poke036</item>
+       <item>@drawable/poke037</item>
+       <item>@drawable/poke038</item>
+       <item>@drawable/poke039</item>
+   </array>
+</resources>

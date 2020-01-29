@@ -58,6 +58,7 @@
     <string name="function_list_check_bluetooth_device">BLUETOOTH CHECK</string>
     <string name="function_list_image_motorizer">IMAGE MOTORIZER</string>
     <string name="function_list_line_motorizer">LINE MOTORIZER</string>
+    <string name="function_list_pokemon_motorizer">POKEMON MOTORIZER</string>
 
     <string name="device_status_bluetooth">Bluetooth</string>
     <string name="device_status_ink">Ink</string>

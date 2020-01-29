@@ -58,6 +58,7 @@ public class FunctionListFragment extends BaseFragment {
         names.add(getResources().getString(R.string.function_list_check_bluetooth_device));
         names.add(getResources().getString(R.string.function_list_image_motorizer));
         names.add(getResources().getString(R.string.function_list_line_motorizer));
+        names.add(getResources().getString(R.string.function_list_pokemon_motorizer));
         mFunctionList.update(names);
     }
 
@@ -110,6 +111,9 @@ public class FunctionListFragment extends BaseFragment {
                 break;
             case 13:
                 LineMotorizerFragment.startFragment(Transition.NEXT);
+                break;
+            case 14:
+                PokemonMotorizerFragment.startFragment(Transition.NEXT);
                 break;
         }
     }

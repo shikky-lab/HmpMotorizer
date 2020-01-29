@@ -109,7 +109,7 @@ public class BarCodeFragment extends BaseFragment {
     /**
      * 高さ選択
      */
-    @BindView(R.id.height)
+    @BindView(R.id.quantity)
     HeightSpinner mHeightView;
 
     /**

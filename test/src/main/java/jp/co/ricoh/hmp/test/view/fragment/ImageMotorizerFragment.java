@@ -82,7 +82,7 @@ public class ImageMotorizerFragment extends BaseFragment {
     @BindView(R.id.width)
     EditText widthEditText;
 
-    @BindView(R.id.height)
+    @BindView(R.id.quantity)
     EditText heightEditText;
 
     @BindView(R.id.line_switch)
@@ -174,7 +174,7 @@ public class ImageMotorizerFragment extends BaseFragment {
 //        updateBasedWidth(mBitmap,Integer.parseInt(inputText));
 //    }
 
-    @OnFocusChange(value = R.id.height)
+    @OnFocusChange(value = R.id.quantity)
     void afterHeightTextChanged(@SuppressWarnings("unused") View v, boolean hasFocus) {
         if(hasFocus){
             return;
@@ -190,7 +190,7 @@ public class ImageMotorizerFragment extends BaseFragment {
 
 //    @OnTextChanged(value = R.id.height,callback = OnTextChanged.Callback.AFTER_TEXT_CHANGED)
 //    void afterHeightTextChanged(Editable s){
-//        if(heightEditText.hasFocus()){
+//        if(quantityEditText.hasFocus()){
 //            return;
 //        }
 //        String inputText = s.toString();
