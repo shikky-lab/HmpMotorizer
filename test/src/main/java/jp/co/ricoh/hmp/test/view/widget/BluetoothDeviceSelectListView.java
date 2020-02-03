@@ -94,8 +94,10 @@ public class BluetoothDeviceSelectListView extends ListView {
      * 更新
      */
     public synchronized void update(BluetoothDevice mBtDevice) {
-        if(mItems.stream().anyMatch(e -> e.getAddress().equals(mBtDevice.getAddress()))){
-            return;
+        for(Item mItem : mItems){
+            if(mItem.getAddress().equals((mBtDevice.getAddress()))){
+                return;
+            }
         }
         mItems.add(new Item(mBtDevice));
         mAdapter.notifyDataSetChanged();
@@ -107,7 +109,9 @@ public class BluetoothDeviceSelectListView extends ListView {
             return;
         }
         mItems.clear();
-        mBtDevices.forEach(e->mItems.add(new Item(e)));
+        for(BluetoothDevice mBtDevice:mBtDevices){
+            mItems.add(new Item(mBtDevice));
+        }
         mAdapter.notifyDataSetChanged();
     }
 
