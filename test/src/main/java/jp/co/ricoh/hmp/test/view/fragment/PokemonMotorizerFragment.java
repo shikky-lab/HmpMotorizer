@@ -18,6 +18,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -87,11 +88,19 @@ public class PokemonMotorizerFragment extends BaseFragment {
     @BindView(R.id.head_title)
     TextView tvTitle;
 
-    @BindView(R.id.width)
-    EditText widthEditText;
-
     @BindView(R.id.quantity)
     EditText quantityEditText;
+
+    @BindView(R.id.no_mark)
+    CheckBox noMarkCheck;
+    @BindView(R.id.GS)
+    CheckBox gsCheck;
+    @BindView(R.id.RS)
+    CheckBox rsCheck;
+    @BindView(R.id.DP)
+    CheckBox dpCheck;
+    @BindView(R.id.BW)
+    CheckBox bwCheck;
 
     ArrayList<HmpImage> mImages = new ArrayList<>();
 
@@ -137,8 +146,6 @@ public class PokemonMotorizerFragment extends BaseFragment {
         mCopiesEdit.setCopies(mCopies);
         tvTitle.setText(getResources().getString(R.string.image_motorizer_title));
         //画像を読み込むまではdeactivateしておく
-        widthEditText.setEnabled(false);
-        quantityEditText.setEnabled(false);
     }
 
     @Override
@@ -155,17 +162,47 @@ public class PokemonMotorizerFragment extends BaseFragment {
 
     @OnClick(R.id.generate_button)
     void generateImage(){
-        generateImage(5);
+
+        String inputText = quantityEditText.getText().toString();
+
+        if(!inputText.matches(digitRegex)){
+            Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(),"Please input digit",Toast.LENGTH_SHORT).show();
+            return;
+        }
+        generateImage(Integer.parseInt(inputText));
     }
 
-    void generateImage(int quantitiy){
+    void generateImage(int quantity){
 
         TypedArray typedArray = getContext().getResources().obtainTypedArray(R.array.pokemon_array);
         List<Mat> pics = new ArrayList<>();
+        List<PokemonRange> pokemonRanges = new ArrayList<>();
+        if(noMarkCheck.isChecked()){
+            pokemonRanges.add(PokemonRange.NO_MARK);
+        }
+        if(gsCheck.isChecked()){
+            pokemonRanges.add(PokemonRange.GS);
+        }
+        if(rsCheck.isChecked()){
+            pokemonRanges.add(PokemonRange.RS);
+        }
+        if(dpCheck.isChecked()){
+            pokemonRanges.add(PokemonRange.DP);
+        }
+        if(bwCheck.isChecked()){
+            pokemonRanges.add(PokemonRange.BW);
+        }
+        if(pokemonRanges.size() == 0 ){
+            Toast.makeText(Objects.requireNonNull(getActivity()).getApplicationContext(), "please check at least one generation", Toast.LENGTH_LONG).show();
+            return;
+        }
+
         try {
-            for(int i=0;i<quantitiy;i++){
-                int rand = (int) (Math.floor(Math.random()*36));
-                Mat temp = Utils.loadResource(this.getContext(),typedArray.getResourceId(rand,0));
+            for(int i=0;i<quantity;i++){
+                int randGeneration = (int) (Math.floor(Math.random()*pokemonRanges.size()));
+                PokemonRange targetGeneration = pokemonRanges.get(randGeneration);
+                int target = (int) (Math.floor(Math.random()*(targetGeneration.getLast()-targetGeneration.getFirst())+targetGeneration.getFirst()));
+                Mat temp = Utils.loadResource(this.getContext(),typedArray.getResourceId(target,0));
                 pics.add(temp);
             }
         } catch (IOException e) {
@@ -260,7 +297,6 @@ public class PokemonMotorizerFragment extends BaseFragment {
     public void OnClickPrintButton(View v)
     {
         generateImage();
-
     }
 
     @OnClick(R.id.cancel_button)
@@ -331,5 +367,25 @@ public class PokemonMotorizerFragment extends BaseFragment {
                 break;
         }
     }
+    public enum PokemonRange{
+        NO_MARK(1,151),
+        GS(152,251),
+        RS(252,386),
+        DP(387,493),
+        BW(494,625);//ホントは649まで行きたいが，なぜか626以降はエラーが出る．サイズが間違ってたためだと思われるが，直しても動作しない．謎．
 
+        private int first;
+        private int last;
+        PokemonRange(int first,int last){
+            this.first=first;
+            this.last = last;
+        }
+        public int getFirst(){
+            return first;
+        }
+        public int getLast(){
+            return last;
+        }
+
+    }
 }

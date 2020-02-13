@@ -48,71 +48,93 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom">
 
-        <TextView
-            android:id="@+id/width_title"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:layout_alignParentTop="true"
-            android:layout_marginStart="20dp"
-            android:gravity="center_vertical"
-            android:text="@string/photo_width"
-            android:textColor="#000000"
-            android:textSize="18sp" />
 
-        <EditText
-            android:id="@+id/width"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:layout_alignBottom="@+id/width_title"
-            android:layout_toEndOf="@+id/width_title"
-            android:hint="set line width(default:12)"
-            android:importantForAutofill="no"
-            android:inputType="number"
-            android:text=""
-            android:textColor="#000000"
-            android:textSize="18sp" />
-
-        <TextView
+        <CheckBox
+            android:id="@+id/no_mark"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignBaseline="@+id/width_title"
-            android:layout_toEndOf="@+id/width"
-            android:text="@string/mm" />
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginStart="0dp"
+            android:layout_marginTop="0dp"
+            android:text="赤緑" />
+
+        <CheckBox
+            android:id="@+id/GS"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@id/no_mark"
+            android:layout_marginStart="0dp"
+            android:layout_marginTop="0dp"
+            android:layout_toEndOf="@id/no_mark"
+            android:text="金銀" />
+
+        <CheckBox
+            android:id="@+id/RS"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@id/no_mark"
+            android:layout_marginStart="0dp"
+            android:layout_marginTop="0dp"
+            android:layout_toEndOf="@id/GS"
+            android:text="RS" />
+
+        <CheckBox
+            android:id="@+id/DP"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@id/no_mark"
+            android:layout_marginStart="0dp"
+            android:layout_marginTop="0dp"
+            android:layout_toEndOf="@id/RS"
+            android:text="DP" />
+
+        <CheckBox
+            android:id="@+id/BW"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@id/no_mark"
+            android:layout_marginStart="0dp"
+            android:layout_marginTop="0dp"
+            android:layout_toEndOf="@id/DP"
+            android:text="黒白" />
+
 
         <FrameLayout
-            android:id="@+id/width_layout"
+            android:id="@+id/checkbox_layout"
             android:layout_width="match_parent"
-            android:layout_height="2dp"
-            android:layout_below="@+id/width_title" />
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/no_mark" />
 
         <TextView
             android:id="@+id/quantity_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/width_layout"
+            android:layout_below="@+id/checkbox_layout"
             android:layout_marginStart="20dp"
+            android:layout_marginTop="10dp"
             android:gravity="center_vertical"
             android:text="Quantity"
             android:textColor="#000000"
-            android:textSize="18sp" />
+            android:textSize="24sp" />
 
         <EditText
             android:id="@+id/quantity"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/width_layout"
+            android:layout_alignBottom="@+id/quantity_title"
             android:layout_toEndOf="@+id/quantity_title"
             android:hint="set quantity of pokemon in 1 line"
             android:importantForAutofill="no"
             android:inputType="number"
-            android:text=""
+            android:text="10"
             android:textColor="#000000"
             android:textSize="18sp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignBaseline="@+id/quantity"
+            android:layout_alignBottom="@+id/quantity_title"
             android:layout_toEndOf="@+id/width" />
 
         <FrameLayout
@@ -195,6 +217,7 @@
             android:layout_below="@+id/repeat_layout"
             android:layout_marginTop="5dp"
             android:background="#000000" />
+
     </RelativeLayout>
 
     <RelativeLayout
